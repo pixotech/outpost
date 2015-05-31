@@ -11,7 +11,7 @@ mkdir quickstart
 mkdir quickstart/src
 ```
 
-Create composer file
+Create quickstart/composer.json
 
 ```json
 {
@@ -24,8 +24,15 @@ Create composer file
 }
 ```
 
+Run composer
+
+```sh
+composer up
+```
+
 ### Create site object
 
+Create quickstart/src/Site.php
 ```php
 <?php
 
@@ -44,7 +51,7 @@ Create public directory
 mkdir quickstart/public
 ```
 
-Create index.php
+Create quickstart/public/index.php
 
 ```php
 <?php
@@ -71,7 +78,7 @@ Outpost says it can't find the site
 
 ## Add a configuration file
 
-Add quickstart/outpost.json:
+Create quickstart/outpost.json:
 
 ```json
 {
@@ -84,11 +91,13 @@ Reload the site. Outpost says it doesn't recognize the request.
 
 ## Add a responder
 
+Create a directory for responders:
+
 ```sh
 mkdir quickstart/src/Responders
 ```
 
-quickstart/src/Responders/Responder.php
+Create quickstart/src/Responders/Responder.php
 ```php
 <?php
 
@@ -102,7 +111,10 @@ class Responder extends \Outpost\Responders\Responder {
 }
 ```
 
-Tell the site to use the new responder:
+Tell the site to use the new responder.
+
+Change quickstart/src/Site.php
+
 ```php
 class Site extends \Outpost\Site {
   protected function getResponders($request) {
@@ -113,7 +125,9 @@ class Site extends \Outpost\Site {
 
 Invalid response
 
-Use the makeResponse() method to create a Response from text:
+Use the makeResponse() method to create a Response from text.
+
+Change quickstart/src/Responders/Responder.php
 
 ```php
   function invoke() {
