@@ -30,7 +30,7 @@ Run composer
 composer up
 ```
 
-## Create site object
+## Create a site object
 
 Create quickstart/src/Site.php
 ```php
