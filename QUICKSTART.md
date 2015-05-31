@@ -94,8 +94,6 @@ quickstart/src/Responders/Responder.php
 
 namespace Quickstart\Responders;
 
-use Symfony\Component\HttpFoundation\Response;
-
 class Responder extends \Outpost\Responders\Responder {
 
   function invoke() {
