@@ -75,8 +75,7 @@ Outpost says it can't find the site
 Create quickstart/outpost.json:
 
 ```json
-{
-}
+{}
 ```
 
 Reload the site. Outpost says it doesn't recognize the request.
