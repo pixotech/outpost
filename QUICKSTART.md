@@ -35,11 +35,8 @@ composer up
 Create quickstart/src/Site.php
 ```php
 <?php
-
 namespace Quickstart;
-
 class Site extends \Outpost\Site {
-
 }
 ```
 
@@ -55,11 +52,8 @@ Create quickstart/public/index.php
 
 ```php
 <?php
-
 namespace Quickstart;
-
 require_once "../vendor/autoload.php";
-
 Site::respond();
 ```
 
@@ -100,11 +94,8 @@ mkdir quickstart/src/Responders
 Create quickstart/src/Responders/Responder.php
 ```php
 <?php
-
 namespace Quickstart\Responders;
-
 class Responder extends \Outpost\Responders\Responder {
-
   function invoke() {
     return "Hello.";
   }
