@@ -97,7 +97,7 @@ Create quickstart/src/Responders/Responder.php
 namespace Quickstart\Responders;
 class Responder extends \Outpost\Responders\Responder {
   function invoke() {
-    return "Hello.";
+    return $this->makeResponse("Hello");
   }
 }
 ```
@@ -112,18 +112,6 @@ class Site extends \Outpost\Site {
     return new Responders\Responder($this, $request);
   }
 }
-```
-
-Invalid response
-
-Use the makeResponse() method to create a Response from text.
-
-Change quickstart/src/Responders/Responder.php
-
-```php
-  function invoke() {
-    return $this->makeResponse("Hello.");
-  }
 ```
 
 Reload the page. Hello!
