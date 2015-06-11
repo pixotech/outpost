@@ -2,14 +2,11 @@
 
 ## Features
 
-* Caching client
+* A caching web client for fetching and storing remote resources
 
-* Asset handling
+* Remote image fetching and local transformations, including resizing, cropping, and compositing
 
-* Development tools and onscreen help
-
-* Command line interface
-
+* Development log and debugging tools
 
 Outpost has native support for these libraries:
 
@@ -26,7 +23,7 @@ Libraries are available for integration with the following:
 
 * **[Patternlab](https://github.com/pattern-lab/patternlab-php).** Twig version only.
 
-* **[Wordpress REST API](https://wordpress.org/plugins/json-rest-api/).** Verbose post objects. Gravity Forms and ACF integration.
+* **[Wordpress REST API](https://wordpress.org/plugins/json-rest-api/).** With Gravity Forms and ACF integration.
 
 * **[Phroute](https://github.com/mrjgreen/phroute).**
 
