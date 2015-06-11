@@ -54,7 +54,8 @@ Create quickstart/public/index.php
 <?php
 namespace Quickstart;
 require_once "../vendor/autoload.php";
-Site::respond();
+$environment = new \Outpost\Environments\DevelopmentEnvironment(__DIR__ . "/..");
+Site::respond($environment);
 ```
 
 Start a local webserver:
@@ -67,20 +68,7 @@ Visit the site in a browser:
 
 [http://localhost:8080/](http://localhost:8080/)
 
-Outpost says it can't find the site
-
-
-## Add a configuration file
-
-Create quickstart/outpost.json:
-
-```json
-{}
-```
-
-Reload the site. Outpost says it doesn't recognize the request.
-
-
+Outpost says it doesn't recognize the request.
 
 ## Add a responder
 
@@ -113,4 +101,8 @@ class Site extends \Outpost\Site {
 }
 ```
 
-Reload the page. Hello!
+Reload the page. You should see:
+
+```
+Hello
+```
