@@ -1,0 +1,85 @@
+body {
+  margin: 0;
+  padding: 2em 10%;
+  background-color: #fff;
+  color: #060606;
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+code {
+  white-space: pre;
+}
+
+
+.code .line {
+  position: relative;
+  font-family: monospace;
+}
+.code .line:nth-child(even) {
+  background-color: #f0f0f0;
+}
+.code .line.highlighted {
+  background-color: yellow;
+}
+.code .line .number {
+  position: absolute;
+  right: 100%;
+  padding: .25em 1em .25em .5em;
+  opacity: .5;
+}
+.code .line code {
+  display: block;
+  padding: .25em .5em;
+}
+
+
+
+.function {
+  margin: 1em 0;
+  font-size: 1.5em;
+  color: #999;
+}
+.function .name {
+  color: #000;
+}
+.comment {
+  background-color: #f0f0f0;
+  padding: 2em;
+}
+
+
+
+ol.trace {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+ol.trace > li {
+  margin: 4em 0 0;
+  border-top: 1px solid #666666;
+  padding: 4em 0 0;
+}
+
+
+
+table.arguments {
+  width: 100%;
+  border-collapse: collapse;
+}
+table.arguments td, table.arguments th {
+  border-top: 1px solid #999;
+  vertical-align: top;
+  padding: .5em 0;
+}
+table.arguments th {
+  text-align: left;
+  padding-right: 2em;
+  width: 20%;
+}
+table.arguments td {
+  width: 80%;
+}
+table.arguments td pre {
+  margin: 0;
+  padding: 0;
+}
