@@ -10,7 +10,6 @@
 namespace Outpost\Web;
 
 use GuzzleHttp\ClientInterface as GuzzleClientInterface;
-use Outpost\Web\ClientInterface;
 use Stash\Interfaces\PoolInterface;
 
 class Client implements ClientInterface {
@@ -24,7 +23,7 @@ class Client implements ClientInterface {
   }
 
   public function get($url = null, $options = [], $key = null, $lifetime = null) {
-    if (!isset($key)) $key = md5($url . serialize($options));
+    if (!isset($key)) $key = 'http/' . md5($url . serialize($options));
     $cached = $this->getCache()->getItem($key);
     $response = $cached->get();
     if ($cached->isMiss()) {
