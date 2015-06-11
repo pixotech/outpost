@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<phpdoc>
+  <title>Outpost</title>
+  <parser>
+    <target>cache/phpdoc</target>
+    <default-package-name>Outpost</default-package-name>
+  </parser>
+  <transformer>
+    <target>doc</target>
+  </transformer>
+  <files>
+    <directory>src</directory>
+  </files>
+</phpdoc>
