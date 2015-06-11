@@ -1,4 +1,4 @@
-# A PHP Framework for Connected Websites
+# A PHP Framework for Decoupled Sites
 
 ## Features
 
