@@ -9,7 +9,7 @@
 
 namespace Outpost\Html;
 
-class Document {
+class Document implements DocumentInterface {
 
   protected $body;
   protected $charset = 'UTF-8';
@@ -41,6 +41,14 @@ class Document {
 
   public function addStylesheet($url) {
     $this->stylesheets[] = $url;
+  }
+
+  public function getBody() {
+    return $this->body;
+  }
+
+  public function getTitle() {
+    return $this->title;
   }
 
   protected function hasScripts() {
