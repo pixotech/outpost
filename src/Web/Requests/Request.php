@@ -3,9 +3,11 @@
 namespace Outpost\Web\Requests;
 
 use GuzzleHttp\Message\ResponseInterface;
+use Outpost\Web\Exceptions\ClientErrorException;
 use Outpost\Web\Exceptions\ResponseException;
 use Outpost\Web\Exceptions\NotFoundException;
 use Outpost\Web\Exceptions\InternalServerErrorException;
+use Outpost\Web\Exceptions\ServerErrorException;
 use Outpost\Web\Exceptions\UnauthorizedException;
 
 class Request implements RequestInterface {
@@ -68,16 +70,19 @@ class Request implements RequestInterface {
   }
 
   public function validateResponse(ResponseInterface $response) {
-    if ($response->getStatusCode() != 200) {
-      switch ($response->getStatusCode()) {
-        case 401:
-          return new NotFoundException($this, $response);
-        case 404:
-          return new UnauthorizedException($this, $response);
-        case 500:
-          return new InternalServerErrorException($this, $response);
+    $statusCode = (string)$response->getStatusCode();
+    if ($statusCode != '200') {
+      switch ($statusCode) {
+        case '401':
+          throw new UnauthorizedException($this, $response);
+        case '404':
+          throw new NotFoundException($this, $response);
+        case '500':
+          throw new InternalServerErrorException($this, $response);
         default:
-          return new ResponseException($this, $response);
+          if ($statusCode[0] == '4') throw new ClientErrorException($this, $response);
+          elseif ($statusCode[0] == '5') throw new ServerErrorException($this, $response);
+          else throw new ResponseException($this, $response);
       }
     }
   }
