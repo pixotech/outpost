@@ -41,6 +41,14 @@ class ResponseException extends \Exception implements HasDescriptionInterface {
     return $desc;
   }
 
+  public function getRequest() {
+    return $this->request;
+  }
+
+  public function getResponse() {
+    return $this->response;
+  }
+
   public function getResponseBody() {
     return (string)$this->response->getBody();
   }

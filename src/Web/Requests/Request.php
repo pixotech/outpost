@@ -64,20 +64,20 @@ class Request implements RequestInterface {
   }
 
   public function processResponse(ResponseInterface $response) {
-    return $response->getBody();
+    return (string)$response->getBody();
   }
 
   public function validateResponse(ResponseInterface $response) {
     if ($response->getStatusCode() != 200) {
       switch ($response->getStatusCode()) {
         case 401:
-          return new NotFoundException($request, $response);
+          return new NotFoundException($this, $response);
         case 404:
-          return new UnauthorizedException($request, $response);
+          return new UnauthorizedException($this, $response);
         case 500:
-          return new InternalServerErrorException($request, $response);
+          return new InternalServerErrorException($this, $response);
         default:
-          return new ResponseException($request, $response);
+          return new ResponseException($this, $response);
       }
     }
   }

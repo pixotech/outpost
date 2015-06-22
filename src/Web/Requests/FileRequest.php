@@ -2,15 +2,15 @@
 
 namespace Outpost\Web\Requests;
 
-class FileRequest extends Request {
+use GuzzleHttp\Message\ResponseInterface;
 
-  protected $localPath;
+class FileRequest extends Request {
 
   public function getRequestOptions() {
     return ['stream' => true];
   }
 
-  public function getRequestUrl() {
-    return $this->url;
+  public function processResponse(ResponseInterface $response) {
+    return $response->getBody();
   }
 }
