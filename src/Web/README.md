@@ -26,6 +26,15 @@ Outpost provides three Request classes by default:
     $stream = $client->send(new FileRequest("http://example.com/resource.jpg");
     ```
 
+## Authentication
+
+Use the `authenticate()` method to add Basic Authentication to a request.
+
+```php
+$request = new Request("http://example.com/resource.html");
+$request->authenticate('api_user', 'userpass123');
+```
+
 ## Custom requests
 
 The `Client::send()` method accepts any object which implements `RequestInterface`. The following methods are used to construct a [Guzzle request][guzzle request]:
