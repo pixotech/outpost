@@ -35,6 +35,10 @@ class ImageWithOverlay extends Image {
     return $this->getImage()->getAlt();
   }
 
+  public function getExtension() {
+    return $this->getImage()->getExtension();
+  }
+
   public function getImage() {
     return $this->image;
   }

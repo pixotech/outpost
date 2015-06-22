@@ -9,9 +9,9 @@
 
 namespace Outpost\Web;
 
-interface ClientInterface {
+use Outpost\Web\Requests\RequestInterface;
 
-  public function get($url = null, $options = [], $key = null, $lifetime = null);
+interface ClientInterface {
 
   /**
    * @return \Stash\Interfaces\PoolInterface
@@ -22,4 +22,10 @@ interface ClientInterface {
    * @return \GuzzleHttp\ClientInterface
    */
   public function getClient();
+
+  /**
+   * @var RequestInterface $request
+   * @return mixed
+   */
+  public function send(RequestInterface $request);
 }

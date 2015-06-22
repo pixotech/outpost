@@ -29,12 +29,16 @@ class SolidOverlay extends Overlay {
     exec("convert -size $size canvas:$color $output");
   }
 
-  public function getKey($width, $height) {
-    return Image::makeKey($this->color, $width, $height);
-  }
-
   public function getColor() {
     return "#{$this->color}";
+  }
+
+  public function getExtension() {
+    return 'jpg';
+  }
+
+  public function getKey($width, $height) {
+    return Image::makeKey($this->color, $width, $height);
   }
 }
 

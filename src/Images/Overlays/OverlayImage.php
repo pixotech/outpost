@@ -29,6 +29,10 @@ class OverlayImage extends Image {
     $this->getOverlay()->generate($file, $this->width, $this->height);
   }
 
+  public function getExtension() {
+    return $this->getOverlay()->getExtension();
+  }
+
   /**
    * @return string
    */

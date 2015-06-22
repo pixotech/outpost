@@ -24,5 +24,9 @@ abstract class GradientOverlay extends Overlay {
   }
 
   abstract public function getGradient();
+
+  public function getExtension() {
+    return 'jpg';
+  }
 }
 

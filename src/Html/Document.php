@@ -11,6 +11,7 @@ namespace Outpost\Html;
 
 class Document implements DocumentInterface {
 
+  protected $baseHref;
   protected $body;
   protected $charset = 'UTF-8';
   protected $scripts = [];
@@ -49,6 +50,10 @@ class Document implements DocumentInterface {
 
   public function getTitle() {
     return $this->title;
+  }
+
+  public function setBaseHref($href) {
+    $this->baseHref = $href;
   }
 
   protected function hasScripts() {
@@ -104,6 +109,9 @@ class Document implements DocumentInterface {
     $head  = $this->makeTitle();
     $head .= $this->makeCharsetMeta();
     $head .= $this->makeMeta('viewport', 'width=device-width');
+    if (!empty($this->baseHref)) {
+      $head .= $this->makeOpeningTag('base', ['href' => $this->baseHref]);
+    }
     if ($this->hasStyles()) $head .= $this->makeStyleBlocks();
     if (!$this->hasStyles() && $this->hasStylesheets()) $head .= $this->makeStylesheetLinks();
     return $this->makeElement('head', $head);

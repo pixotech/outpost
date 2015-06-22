@@ -9,5 +9,5 @@
 
 namespace Outpost\Web\Exceptions;
 
-class NotFoundException extends ClientErrorException {
+class ServerErrorException extends ResponseException {
 }

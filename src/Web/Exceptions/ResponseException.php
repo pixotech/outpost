@@ -9,24 +9,35 @@
 
 namespace Outpost\Web\Exceptions;
 
+use Exception;
 use GuzzleHttp\Message\ResponseInterface;
 use Outpost\Recovery\HasDescriptionInterface;
+use Outpost\Web\Requests\RequestInterface;
 
-abstract class ClientException extends \Exception implements HasDescriptionInterface {
+class ResponseException extends \Exception implements HasDescriptionInterface {
 
+  protected $request;
   protected $response;
 
-  public function __construct(ResponseInterface $response) {
-    $message = $response->getReasonPhrase() . ': ' . $response->getEffectiveUrl();
-    parent::__construct($message, $response->getStatusCode());
+  public function __construct(RequestInterface $request, ResponseInterface $response) {
+    $this->request = $request;
     $this->response = $response;
+    $message = $response->getReasonPhrase() . ': ' . $response->getEffectiveUrl();
+    $statusCode = $response->getStatusCode();
+    parent::__construct($message, $statusCode);
   }
 
   public function getDescription() {
     $desc  = '<h1>' . $this->getResponseReasonPhrase() . '</h1>';
+
+    $desc .= '<h2>Request</h2>';
+    $desc .= @\Kint::dump($this->request);
+
+    $desc .= '<h2>Response</h2>';
     $desc .= sprintf('<p><a href="%s">%s</a></p>', $this->getResponseUrl(), htmlentities($this->getResponseUrl()));
-    $desc .= '<pre>' . $this->getResponseBody() . '</pre>';
+    $desc .= '<pre>' . htmlentities($this->getResponseBody()) . '</pre>';
     $desc .= @\Kint::dump($this->response);
+
     return $desc;
   }
 

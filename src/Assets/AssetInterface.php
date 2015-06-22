@@ -11,5 +11,6 @@ namespace Outpost\Assets;
 
 interface AssetInterface {
   public function generate(FileInterface $file, StorageInterface $storage);
+  public function getExtension();
   public function getKey();
 }

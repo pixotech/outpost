@@ -23,10 +23,7 @@ class Storage implements \IteratorAggregate, StorageInterface {
 
   public function getFile(AssetInterface $asset) {
     $file = $this->makeFile($asset);
-    if (!$file->exists()) {
-      $this->ensureFileDirectory($file);
-      $asset->generate($file, $this);
-    }
+    if (!$file->exists()) $this->generateAssetFile($asset, $file);
     return $file;
   }
 
@@ -46,6 +43,11 @@ class Storage implements \IteratorAggregate, StorageInterface {
     $this->ensureDirectory(dirname($file->getPath()));
   }
 
+  protected function generateAssetFile(AssetInterface $asset, FileInterface $file) {
+    $this->ensureFileDirectory($file);
+    $asset->generate($file, $this);
+  }
+
   protected function getDirectoryIterator() {
     return new \RecursiveDirectoryIterator($this->directoryPath);
   }
@@ -60,7 +62,7 @@ class Storage implements \IteratorAggregate, StorageInterface {
   }
 
   protected function makePath(AssetInterface $asset) {
-    return $this->directoryPath . '/' . $asset->getKey();
+    return $this->directoryPath . '/' . $asset->getKey() . '.' . $asset->getExtension();
   }
 
   protected function makeUrl(AssetInterface $asset) {

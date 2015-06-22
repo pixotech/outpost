@@ -9,17 +9,23 @@
 
 namespace Outpost\Images;
 
-use GuzzleHttp\Client;
 use Outpost\Assets\StorageInterface;
 use Outpost\Assets\FileInterface;
+use Outpost\Web\ClientInterface;
+use Outpost\Web\Requests\FileRequest;
 
 class RemoteImage extends Image {
 
   protected $url;
 
-  public function __construct($url, $alt = '') {
+  public function __construct(ClientInterface $client, $url, $alt = '') {
     parent::__construct($alt);
+    $this->client = $client;
     $this->url = $url;
+  }
+
+  public function getExtension() {
+    return pathinfo($this->url, PATHINFO_EXTENSION);
   }
 
   public function getKey() {
@@ -27,18 +33,17 @@ class RemoteImage extends Image {
   }
 
   public function generate(FileInterface $file, StorageInterface $storage) {
+    $body = $this->getClient()->send($this->makeRequest());
     $fp = fopen($file->getPath(), 'wb');
-    $body = $this->getResponse()->getBody();
     while (!$body->eof()) fwrite($fp, $body->read(1024));
     fclose($fp);
   }
 
-  protected function getClient() {
-    return new Client();
+  public function makeRequest() {
+    return new FileRequest($this->url);
   }
 
-  protected function getResponse() {
-    $client = $this->getClient();
-    return $client->get($this->url, ['stream' => true]);
+  protected function getClient() {
+    return $this->client;
   }
 }

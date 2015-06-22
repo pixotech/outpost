@@ -47,6 +47,10 @@ class ResizedImage extends Image {
     return new Dimensions($this->getWidth(), $this->getHeight(), '^');
   }
 
+  public function getExtension() {
+    return $this->getImage()->getExtension();
+  }
+
   public function getHeight() {
     return $this->height;
   }

@@ -13,5 +13,6 @@ use Outpost\Assets\FileInterface;
 
 interface OverlayInterface {
   public function generate(FileInterface $file, $width, $height);
+  public function getExtension();
   public function getKey($width, $height);
 }

@@ -9,5 +9,5 @@
 
 namespace Outpost\Web\Exceptions;
 
-class UnauthorizedException extends ClientException {
+class UnauthorizedException extends ClientErrorException {
 }

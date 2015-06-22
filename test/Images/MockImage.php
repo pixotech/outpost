@@ -28,4 +28,8 @@ class MockImage implements ImageInterface {
   public function getKey() {
     return $this->key;
   }
+
+  public function getExtension() {
+    // TODO: Implement getExtension() method.
+  }
 }

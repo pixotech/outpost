@@ -9,6 +9,7 @@
 
 namespace Outpost;
 
+use Outpost\Environments\EnvironmentInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 interface SiteInterface {
@@ -19,9 +20,14 @@ interface SiteInterface {
   public function getCache();
 
   /**
-   * @return \GuzzleHttp\ClientInterface
+   * @return \Outpost\Web\Client
    */
   public function getClient();
+
+  /**
+   * @return EnvironmentInterface
+   */
+  public function getEnvironment();
 
   /**
    * @return \Psr\Log\LoggerInterface

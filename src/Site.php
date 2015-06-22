@@ -11,6 +11,7 @@ namespace Outpost;
 
 use Outpost\Environments\EnvironmentInterface;
 use Outpost\Responders\ResponderInterface;
+use Outpost\Web\Requests\Request as WebRequest;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -22,7 +23,7 @@ class Site implements SiteInterface {
   protected $cache;
 
   /**
-   * @var Web\Client
+   * @var \Outpost\Web\Client
    */
   protected $client;
 
@@ -99,6 +100,13 @@ class Site implements SiteInterface {
   }
 
   /**
+   * @return EnvironmentInterface
+   */
+  public function getEnvironment() {
+    return $this->environment;
+  }
+
+  /**
    * @return \Psr\Log\LoggerInterface
    */
   public function getLog() {
@@ -172,6 +180,10 @@ class Site implements SiteInterface {
     return $response;
   }
 
+  public function request(WebRequest $request) {
+    return $this->getClient()->send($request);
+  }
+
   /**
    *
    */
@@ -184,13 +196,6 @@ class Site implements SiteInterface {
    */
   protected function enableErrorHandling() {
     set_error_handler([$this, 'handleError']);
-  }
-
-  /**
-   * @return EnvironmentInterface
-   */
-  protected function getEnvironment() {
-    return $this->environment;
   }
 
   /**
@@ -299,7 +304,7 @@ class Site implements SiteInterface {
   }
 
   /**
-   * @return Web\Client
+   * @return \Outpost\Web\Client
    */
   protected function makeClient() {
     $client = new \GuzzleHttp\Client();
