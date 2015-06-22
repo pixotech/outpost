@@ -215,7 +215,7 @@ class Site implements SiteInterface {
   /**
    * @return ResponderInterface[]
    */
-  protected function getResponders() {
+  protected function getResponders($request) {
     return [];
   }
 
@@ -248,8 +248,10 @@ class Site implements SiteInterface {
    * @throws \Exception
    */
   protected function invokeResponders(Request $request) {
-    /** @var Responders\ResponderInterface $responder */
-    foreach ((array)$this->getResponders($request) as $responder) {
+    /** @var Responders\ResponderInterface[] $responders */
+    $responders = $this->getResponders($request);
+    if (!is_array($responders)) $responders = [$responders];
+    foreach ($responders as $responder) {
       try {
         return $responder->invoke();
       }

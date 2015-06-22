@@ -96,7 +96,7 @@ Change quickstart/src/Site.php
 ```php
 class Site extends \Outpost\Site {
   protected function getResponders($request) {
-    return new Responders\Responder($this, $request);
+    return [new Responders\Responder($this, $request)];
   }
 }
 ```
