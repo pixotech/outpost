@@ -19,9 +19,10 @@ class LogFormatter implements FormatterInterface {
     $lines = [];
     if ($record['level_name'] == 'ERROR') {
       $lines[] = sprintf("%%RError:%%n %s", $record['message']);
-
-      list($file, $line) = $record['context'];
-      $lines[] = "%y$file, line $line%n";
+      if (!empty($record['context'])) {
+        list($file, $line) = $record['context'];
+        $lines[] = "%y$file, line $line%n";
+      }
     }
     else {
       $lines[] = sprintf("[%s] %s", $record['level_name'], $record['message']);

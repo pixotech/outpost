@@ -3,7 +3,10 @@
 namespace Outpost\Web\Requests;
 
 use GuzzleHttp\Message\ResponseInterface;
+use Outpost\Web\Exceptions\BadRequestException;
 use Outpost\Web\Exceptions\ClientErrorException;
+use Outpost\Web\Exceptions\ForbiddenException;
+use Outpost\Web\Exceptions\NotImplementedException;
 use Outpost\Web\Exceptions\ResponseException;
 use Outpost\Web\Exceptions\NotFoundException;
 use Outpost\Web\Exceptions\InternalServerErrorException;
@@ -73,12 +76,18 @@ class Request implements RequestInterface {
     $statusCode = (string)$response->getStatusCode();
     if ($statusCode != '200') {
       switch ($statusCode) {
+        case '400':
+          throw new BadRequestException($this, $response);
         case '401':
           throw new UnauthorizedException($this, $response);
+        case '403':
+          throw new ForbiddenException($this, $response);
         case '404':
           throw new NotFoundException($this, $response);
         case '500':
           throw new InternalServerErrorException($this, $response);
+        case '501':
+          throw new NotImplementedException($this, $response);
         default:
           if ($statusCode[0] == '4') throw new ClientErrorException($this, $response);
           elseif ($statusCode[0] == '5') throw new ServerErrorException($this, $response);
