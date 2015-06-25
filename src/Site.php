@@ -9,9 +9,11 @@
 
 namespace Outpost;
 
+use Outpost\Cache\Cache;
 use Outpost\Environments\EnvironmentInterface;
+use Outpost\Resources\CacheableResourceInterface;
+use Outpost\Resources\ResourceInterface;
 use Outpost\Responders\ResponderInterface;
-use Outpost\Web\Requests\Request as WebRequest;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -86,10 +88,24 @@ class Site implements SiteInterface {
   }
 
   /**
-   * @return \Stash\Interfaces\PoolInterface
+   * @param ResourceInterface $resource
+   * @return mixed
+   */
+  public function get(ResourceInterface $resource) {
+    return ($resource instanceof CacheableResourceInterface) ? $this->getCachedResource($resource) : $this->getUncachedResource($resource);
+  }
+
+  /**
+   * @return \Outpost\Cache\Cache
    */
   public function getCache() {
     return $this->cache;
+  }
+
+  public function getCachedResource(CacheableResourceInterface $resource) {
+    $key = $resource->getCacheKey();
+    $lifetime = $resource->getCacheLifetime();
+    return $this->getCache()->get($key, [$this, 'getResource'], [$resource], $lifetime);
   }
 
   /**
@@ -127,6 +143,14 @@ class Site implements SiteInterface {
    */
   public function getSetting($key) {
     return $this->getSettings()[$key];
+  }
+
+  /**
+   * @param ResourceInterface $resource
+   * @return mixed
+   */
+  public function getUncachedResource(ResourceInterface $resource) {
+    return $resource->invoke($this);
   }
 
   /**
@@ -178,10 +202,6 @@ class Site implements SiteInterface {
     }
     $this->disbleErrorHandling();
     return $response;
-  }
-
-  public function request(WebRequest $request) {
-    return $this->getClient()->send($request);
   }
 
   /**
@@ -300,9 +320,7 @@ class Site implements SiteInterface {
    */
   protected function makeCache($ns = null) {
     $driver = $this->getEnvironment()->getCacheDriver();
-    $cache = new \Stash\Pool($driver);
-    if (isset($ns)) $cache->setNamespace($ns);
-    return $cache;
+    return new Cache($driver, $ns);
   }
 
   /**
@@ -310,8 +328,7 @@ class Site implements SiteInterface {
    */
   protected function makeClient() {
     $client = new \GuzzleHttp\Client();
-    $cache = $this->makeCache('http');
-    return new Web\Client($client, $cache);
+    return new Web\Client($client);
   }
 
   /**

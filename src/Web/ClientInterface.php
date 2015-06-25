@@ -14,11 +14,6 @@ use Outpost\Web\Requests\RequestInterface;
 interface ClientInterface {
 
   /**
-   * @return \Stash\Interfaces\PoolInterface
-   */
-  public function getCache();
-
-  /**
    * @return \GuzzleHttp\ClientInterface
    */
   public function getClient();

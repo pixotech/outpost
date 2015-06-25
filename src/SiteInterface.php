@@ -10,17 +10,31 @@
 namespace Outpost;
 
 use Outpost\Environments\EnvironmentInterface;
+use Outpost\Resources\CacheableResourceInterface;
+use Outpost\Resources\ResourceInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 interface SiteInterface {
 
   /**
-   * @return \Stash\Interfaces\PoolInterface
+   * @param ResourceInterface $resource
+   * @return mixed
+   */
+  public function get(ResourceInterface $resource);
+
+  /**
+   * @return \Outpost\Cache\CacheInterface
    */
   public function getCache();
 
   /**
-   * @return \Outpost\Web\Client
+   * @param CacheableResourceInterface $resource
+   * @return mixed
+   */
+  public function getCachedResource(CacheableResourceInterface $resource);
+
+  /**
+   * @return \Outpost\Web\ClientInterface
    */
   public function getClient();
 
@@ -34,7 +48,7 @@ interface SiteInterface {
    */
   public function getLog();
 
-  /**
+    /**
    * @param string $name
    * @return mixed
    */
@@ -45,6 +59,12 @@ interface SiteInterface {
    * @return mixed
    */
   public function getSecret($name);
+
+  /**
+   * @param ResourceInterface $resource
+   * @return mixed
+   */
+  public function getUncachedResource(ResourceInterface $resource);
 
   /**
    * @param string $name
