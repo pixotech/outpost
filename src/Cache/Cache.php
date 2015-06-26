@@ -14,8 +14,7 @@ class Cache implements CacheInterface {
     if (isset($ns)) $this->cache->setNamespace($ns);
   }
 
-  public function get($key, $callback, array $args = [], $lifetime = null) {
-    if (!is_callable($callback)) throw new \InvalidArgumentException("Invalid callback");
+  public function get($key, callable $callback, array $args = [], $lifetime = null) {
     $cached = $this->cache->getItem($key);
     $content = $cached->get();
     if ($cached->isMiss()) {
