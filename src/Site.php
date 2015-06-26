@@ -99,7 +99,12 @@ class Site implements SiteInterface {
    * @return mixed
    */
   public function get(ResourceInterface $resource) {
-    return ($resource instanceof CacheableResourceInterface) ? $this->getCachedResource($resource) : $this->getUncachedResource($resource);
+    if ($resource instanceof CacheableResourceInterface) {
+      $key = $resource->getCacheKey();
+      $lifetime = $resource->getCacheLifetime();
+      return $this->getCache()->get($key, $resource, [$this], $lifetime);
+    }
+    return call_user_func($resource, $this);
   }
 
   /**
@@ -107,12 +112,6 @@ class Site implements SiteInterface {
    */
   public function getCache() {
     return $this->cache;
-  }
-
-  public function getCachedResource(CacheableResourceInterface $resource) {
-    $key = $resource->getCacheKey();
-    $lifetime = $resource->getCacheLifetime();
-    return $this->getCache()->get($key, [$this, 'getUncachedResource'], [$resource], $lifetime);
   }
 
   /**
@@ -158,14 +157,6 @@ class Site implements SiteInterface {
   public function getTwig() {
     if (!isset($this->twig)) $this->twig = $this->makeTwig();
     return $this->twig;
-  }
-
-  /**
-   * @param ResourceInterface $resource
-   * @return mixed
-   */
-  public function getUncachedResource(ResourceInterface $resource) {
-    return $resource->invoke($this);
   }
 
   /**
@@ -347,7 +338,7 @@ class Site implements SiteInterface {
    */
   protected function makeCache($ns = null) {
     $driver = $this->getEnvironment()->getCacheDriver();
-    return new Cache($driver, $ns);
+    return new Cache($this, $driver, $ns);
   }
 
   /**

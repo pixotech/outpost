@@ -3,5 +3,5 @@
 namespace Outpost\Cache;
 
 interface CacheInterface {
-  public function get($key, callable $callback, array $args = [], $lifetime = null);
+  public function get($key, callable $callback, $lifetime = null);
 }

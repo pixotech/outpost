@@ -28,12 +28,6 @@ interface SiteInterface {
   public function getCache();
 
   /**
-   * @param CacheableResourceInterface $resource
-   * @return mixed
-   */
-  public function getCachedResource(CacheableResourceInterface $resource);
-
-  /**
    * @return \Outpost\Web\ClientInterface
    */
   public function getClient();
@@ -64,12 +58,6 @@ interface SiteInterface {
    * @return \Twig_Environment
    */
   public function getTwig();
-
-  /**
-   * @param ResourceInterface $resource
-   * @return mixed
-   */
-  public function getUncachedResource(ResourceInterface $resource);
 
   /**
    * @param string $name

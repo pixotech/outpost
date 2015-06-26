@@ -32,7 +32,7 @@ class WebResourceTest extends \PHPUnit_Framework_TestCase {
     $url = "http://example.com/";
     $method = 'POST';
     $resource = new WebResource($url, $method);
-    $this->assertEquals($body, $resource->invoke($site));
+    $this->assertEquals($body, $resource->__invoke($site));
     $this->assertEquals($site->client->request, $resource->getRequest());
   }
 

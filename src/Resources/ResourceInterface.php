@@ -5,5 +5,5 @@ namespace Outpost\Resources;
 use Outpost\SiteInterface;
 
 interface ResourceInterface {
-  public function invoke(SiteInterface $site);
+  public function __invoke(SiteInterface $site);
 }
