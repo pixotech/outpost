@@ -101,7 +101,7 @@ class Site implements SiteInterface {
     if ($resource instanceof CacheableInterface) {
       $key = $resource->getCacheKey();
       $lifetime = $resource->getCacheLifetime();
-      return $this->getCache()->get($key, $resource, [$this], $lifetime);
+      return $this->getCache()->get($key, $resource, $lifetime);
     }
     return call_user_func($resource, $this);
   }
