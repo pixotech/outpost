@@ -3,7 +3,7 @@
 namespace Outpost;
 
 use Outpost\Environments\EnvironmentInterface;
-use Outpost\Resources\CacheableResourceInterface;
+use Outpost\Cache\CacheableInterface;
 use Outpost\Resources\ResourceInterface;
 use Outpost\Web\MockClient;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,10 +18,10 @@ class MockSite implements SiteInterface {
   }
 
   /**
-   * @param ResourceInterface $resource
+   * @param callable $resource
    * @return mixed
    */
-  public function get(ResourceInterface $resource) {
+  public function get(callable $resource) {
     // TODO: Implement get() method.
   }
 
@@ -30,14 +30,6 @@ class MockSite implements SiteInterface {
    */
   public function getCache() {
     // TODO: Implement getCache() method.
-  }
-
-  /**
-   * @param CacheableResourceInterface $resource
-   * @return mixed
-   */
-  public function getCachedResource(CacheableResourceInterface $resource) {
-    // TODO: Implement getCachedResource() method.
   }
 
   /**
@@ -82,14 +74,6 @@ class MockSite implements SiteInterface {
    */
   public function getTwig() {
     return $this->twig;
-  }
-
-  /**
-   * @param ResourceInterface $resource
-   * @return mixed
-   */
-  public function getUncachedResource(ResourceInterface $resource) {
-    // TODO: Implement getUncachedResource() method.
   }
 
   /**

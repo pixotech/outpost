@@ -11,8 +11,7 @@ namespace Outpost;
 
 use Outpost\Cache\Cache;
 use Outpost\Environments\EnvironmentInterface;
-use Outpost\Resources\CacheableResourceInterface;
-use Outpost\Resources\ResourceInterface;
+use Outpost\Cache\CacheableInterface;
 use Outpost\Responders\ResponderInterface;
 use Outpost\Responders\Responses\RenderableResponseInterface;
 use Outpost\Responders\Responses\ResponseInterface;
@@ -95,11 +94,11 @@ class Site implements SiteInterface {
   }
 
   /**
-   * @param ResourceInterface $resource
+   * @param callable $resource
    * @return mixed
    */
-  public function get(ResourceInterface $resource) {
-    if ($resource instanceof CacheableResourceInterface) {
+  public function get(callable $resource) {
+    if ($resource instanceof CacheableInterface) {
       $key = $resource->getCacheKey();
       $lifetime = $resource->getCacheLifetime();
       return $this->getCache()->get($key, $resource, [$this], $lifetime);

@@ -10,17 +10,17 @@
 namespace Outpost;
 
 use Outpost\Environments\EnvironmentInterface;
-use Outpost\Resources\CacheableResourceInterface;
+use Outpost\Cache\CacheableInterface;
 use Outpost\Resources\ResourceInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 interface SiteInterface {
 
   /**
-   * @param ResourceInterface $resource
+   * @param callable $resource
    * @return mixed
    */
-  public function get(ResourceInterface $resource);
+  public function get(callable $resource);
 
   /**
    * @return \Outpost\Cache\CacheInterface
