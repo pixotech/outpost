@@ -19,6 +19,8 @@ class MockEnvironment implements EnvironmentInterface {
   public $logHandlers = [];
   public $request;
   public $root;
+  public $twigLoader;
+  public $twigOptions = [];
 
   public static function makeTestEnvironment(Request $request = null) {
     $environment = new MockEnvironment();
@@ -54,5 +56,19 @@ class MockEnvironment implements EnvironmentInterface {
    */
   public function getRootDirectory() {
     return $this->root;
+  }
+
+  /**
+   * @return mixed
+   */
+  public function getTwigLoader() {
+    return $this->twigLoader;
+  }
+
+  /**
+   * @return array
+   */
+  public function getTwigOptions() {
+    return $this->twigOptions;
   }
 }

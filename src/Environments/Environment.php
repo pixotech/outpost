@@ -42,6 +42,14 @@ class Environment implements EnvironmentInterface {
     return $this->rootDirectory;
   }
 
+  public function getTwigLoader() {
+
+  }
+
+  public function getTwigOptions() {
+
+  }
+
   protected function adjust() {
     $this->configureErrorReporting();
     $this->configureTimezone();

@@ -7,6 +7,9 @@ use Outpost\Web\Requests\RequestInterface;
 
 class MockClient implements ClientInterface {
 
+  public $request;
+  public $response;
+
   /**
    * @return \Stash\Interfaces\PoolInterface
    */
@@ -26,6 +29,7 @@ class MockClient implements ClientInterface {
    * @return mixed
    */
   public function send(RequestInterface $request) {
-    // TODO: Implement send() method.
+    $this->request = $request;
+    return $this->response;
   }
 }

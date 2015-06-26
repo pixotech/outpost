@@ -61,6 +61,11 @@ interface SiteInterface {
   public function getSecret($name);
 
   /**
+   * @return \Twig_Environment
+   */
+  public function getTwig();
+
+  /**
    * @param ResourceInterface $resource
    * @return mixed
    */

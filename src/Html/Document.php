@@ -19,12 +19,16 @@ class Document implements DocumentInterface {
   protected $stylesheets = [];
   protected $title;
 
-  public function __construct($body, $title) {
+  public function __construct($body = null, $title = null) {
     $this->body = $body;
     $this->title = $title;
   }
 
   public function __toString() {
+    return $this->toString();
+  }
+
+  public function toString() {
     return $this->makeDoctype() . $this->makeDocument();
   }
 

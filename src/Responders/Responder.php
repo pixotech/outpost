@@ -71,6 +71,13 @@ abstract class Responder implements ResponderInterface {
   }
 
   /**
+   * @return \Twig_Environment
+   */
+  public function getTwig() {
+    return $this->site->getTwig();
+  }
+
+  /**
    * @return Response
    */
   abstract function invoke();

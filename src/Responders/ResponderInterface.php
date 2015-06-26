@@ -37,6 +37,11 @@ interface ResponderInterface {
   public function getRequestPath();
 
   /**
+   * @return \Twig_Environment
+   */
+  public function getTwig();
+
+    /**
    * @return \Symfony\Component\HttpFoundation\Response
    */
   public function invoke();

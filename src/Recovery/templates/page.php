@@ -1,8 +1,12 @@
 
+  <?php if (!empty($title)): ?>
+    <h1><?php print $title ?></h1>
+  <?php endif ?>
+
   <?php if (!empty($description)): ?>
-  <section class="description">
-    <?= $description ?>
-  </section>
+    <section class="description">
+      <?= $description ?>
+    </section>
   <?php endif ?>
 
   <?php if (!empty($repairInstructions)): ?>

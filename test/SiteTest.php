@@ -16,26 +16,36 @@ use Stash\Driver\Ephemeral;
 class SiteTest extends \PHPUnit_Framework_TestCase {
 
   public function testCreateSite() {
-    $environment = new MockEnvironment();
+    $environment = $this->makeEnvironment();
     new Site($environment);
   }
 
   public function testGetSiteCache() {
-    $environment = new MockEnvironment();
-    $environment->cacheDriver = new Ephemeral();
+    $environment = $this->makeEnvironment();
     $site = new Site($environment);
-    $this->assertInstanceOf("Stash\\Pool", $site->getCache());
-    $this->assertSame($environment->cacheDriver, $site->getCache()->getDriver());
+    $this->assertInstanceOf("Outpost\\Cache\\Cache", $site->getCache());
+  }
+
+  public function testGetSiteCacheCache() {
+    $environment = $this->makeEnvironment();
+    $site = new Site($environment);
+    $this->assertInstanceOf("Stash\\Pool", $site->getCache()->getCache());
+  }
+
+  public function testGetSiteCacheDriver() {
+    $environment = $this->makeEnvironment();
+    $site = new Site($environment);
+    $this->assertSame($environment->cacheDriver, $site->getCache()->getCache()->getDriver());
   }
 
   public function testGetSiteClient() {
-    $environment = new MockEnvironment();
+    $environment = $this->makeEnvironment();
     $site = new Site($environment);
     $this->assertInstanceOf("Outpost\\Web\\Client", $site->getClient());
   }
 
   public function testGetSiteLog() {
-    $environment = new MockEnvironment();
+    $environment = $this->makeEnvironment();
     $environment->logHandlers = [new TestHandler()];
     $site = new Site($environment);
     $this->assertInstanceOf("Monolog\\Logger", $site->getLog());
@@ -50,5 +60,14 @@ class SiteTest extends \PHPUnit_Framework_TestCase {
 
   protected function makeTestSiteDirectoryName() {
     return uniqid('outpost-testsite-');
+  }
+
+  /**
+   * @return MockEnvironment
+   */
+  protected function makeEnvironment() {
+    $environment = new MockEnvironment();
+    $environment->cacheDriver = new Ephemeral();
+    return $environment;
   }
 }

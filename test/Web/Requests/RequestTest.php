@@ -64,6 +64,16 @@ class RequestTest extends \PHPUnit_Framework_TestCase {
   }
 
   /**
+   * @expectedException \Outpost\Web\Exceptions\ClientErrorException
+   */
+  public function testOtherClientError() {
+    $body = 'this is the response body';
+    $request = new Request(null);
+    $response = new Response(405, [], Stream::factory($body));
+    $request->validateResponse($response);
+  }
+
+  /**
    * @expectedException \Outpost\Web\Exceptions\InternalServerErrorException
    */
   public function testInternalServerError() {
@@ -74,12 +84,12 @@ class RequestTest extends \PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @expectedException \Outpost\Web\Exceptions\ClientErrorException
+   * @expectedException \Outpost\Web\Exceptions\NotImplementedException
    */
-  public function testOtherClientError() {
+  public function testNotImplemented() {
     $body = 'this is the response body';
     $request = new Request(null);
-    $response = new Response(402, [], Stream::factory($body));
+    $response = new Response(501, [], Stream::factory($body));
     $request->validateResponse($response);
   }
 
@@ -89,7 +99,7 @@ class RequestTest extends \PHPUnit_Framework_TestCase {
   public function testOtherServerError() {
     $body = 'this is the response body';
     $request = new Request(null);
-    $response = new Response(501, [], Stream::factory($body));
+    $response = new Response(502, [], Stream::factory($body));
     $request->validateResponse($response);
   }
 }

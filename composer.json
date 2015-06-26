@@ -18,6 +18,7 @@
     "raveren/kint": "1.0.*",
     "symfony/http-foundation": "~2.0",
     "tedivm/stash": "0.12.*",
+    "twig/twig": "~1.0",
     "wp-cli/php-cli-tools": "*"
   },
   "require-dev": {

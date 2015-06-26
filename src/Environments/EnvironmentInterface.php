@@ -32,4 +32,14 @@ interface EnvironmentInterface {
    * @return string
    */
   public function getRootDirectory();
+
+  /**
+   * @return \Twig_LoaderInterface
+   */
+  public function getTwigLoader();
+
+  /**
+   * @return array
+   */
+  public function getTwigOptions();
 }

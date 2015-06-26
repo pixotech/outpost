@@ -14,6 +14,10 @@ class RootNode implements \ArrayAccess, \Countable, \RecursiveIterator {
   use HasChildren;
 
   public function __construct(array $nodes=[]) {
+    $this->setNodes($nodes);
+  }
+
+  public function setNodes(array $nodes) {
     $nodesById = array();
     $unsorted = $nodes;
     do {

@@ -14,6 +14,8 @@ use Outpost\Environments\EnvironmentInterface;
 use Outpost\Resources\CacheableResourceInterface;
 use Outpost\Resources\ResourceInterface;
 use Outpost\Responders\ResponderInterface;
+use Outpost\Responders\Responses\RenderableResponseInterface;
+use Outpost\Responders\Responses\ResponseInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -48,6 +50,11 @@ class Site implements SiteInterface {
    * @var array
    */
   protected $settings;
+
+  /**
+   * @var \Twig_Environment
+   */
+  protected $twig;
 
   /**
    * @param EnvironmentInterface $environment
@@ -105,7 +112,7 @@ class Site implements SiteInterface {
   public function getCachedResource(CacheableResourceInterface $resource) {
     $key = $resource->getCacheKey();
     $lifetime = $resource->getCacheLifetime();
-    return $this->getCache()->get($key, [$this, 'getResource'], [$resource], $lifetime);
+    return $this->getCache()->get($key, [$this, 'getUncachedResource'], [$resource], $lifetime);
   }
 
   /**
@@ -143,6 +150,14 @@ class Site implements SiteInterface {
    */
   public function getSetting($key) {
     return $this->getSettings()[$key];
+  }
+
+  /**
+   * @return \Twig_Environment
+   */
+  public function getTwig() {
+    if (!isset($this->twig)) $this->twig = $this->makeTwig();
+    return $this->twig;
   }
 
   /**
@@ -253,6 +268,14 @@ class Site implements SiteInterface {
     return $this->settings;
   }
 
+  protected function getTwigLoader() {
+    return $this->getEnvironment()->getTwigLoader();
+  }
+
+  protected function getTwigOptions() {
+    return $this->getEnvironment()->getTwigOptions();
+  }
+
   /**
    * @param \Exception $exception
    * @return Recovery\HelpResponse
@@ -273,7 +296,11 @@ class Site implements SiteInterface {
     if (!is_array($responders)) $responders = [$responders];
     foreach ($responders as $responder) {
       try {
-        return $responder->invoke();
+        $response = $responder->invoke();
+        if ($response instanceof RenderableResponseInterface) $response = $response->render($this->getTwig());
+        if ($response instanceof ResponseInterface) $response = $this->makeResponse($response);
+        if (is_string($response)) $response = new Response($response);
+        return $response;
       }
       catch (Responders\Exceptions\UnrecognizedRequestException $e) {
         continue;
@@ -316,7 +343,7 @@ class Site implements SiteInterface {
 
   /**
    * @param null|string $ns Namespace
-   * @return \Stash\Pool
+   * @return \Outpost\Cache\Cache
    */
   protected function makeCache($ns = null) {
     $driver = $this->getEnvironment()->getCacheDriver();
@@ -344,6 +371,21 @@ class Site implements SiteInterface {
    */
   protected function makeLog() {
     return new \Monolog\Logger('outpost', $this->getLogHandlers(), $this->getLogProcessors());
+  }
+
+  /**
+   * @param ResponseInterface $response
+   * @return Response
+   */
+  protected function makeResponse(ResponseInterface $response) {
+    return new Response($response->getContent(), $response->getStatusCode(), $response->getHeaders());
+  }
+
+  /**
+   * @return \Twig_Environment
+   */
+  protected function makeTwig() {
+    return new \Twig_Environment($this->getTwigLoader(), $this->getTwigOptions());
   }
 
   /**
