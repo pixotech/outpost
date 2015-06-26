@@ -3,8 +3,6 @@
 namespace Outpost;
 
 use Outpost\Environments\EnvironmentInterface;
-use Outpost\Cache\CacheableInterface;
-use Outpost\Resources\ResourceInterface;
 use Outpost\Web\MockClient;
 use Symfony\Component\HttpFoundation\Request;
 
