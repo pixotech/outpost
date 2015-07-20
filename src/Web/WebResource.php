@@ -1,6 +1,6 @@
 <?php
 
-namespace Outpost\Resources;
+namespace Outpost\Web;
 
 use Outpost\SiteInterface;
 use Outpost\Web\Requests\Request;

@@ -3,6 +3,7 @@
 namespace Outpost\Web\Requests;
 
 use GuzzleHttp\Message\ResponseInterface;
+use Outpost\Web\Authentication\AuthenticationInterface;
 use Outpost\Web\Exceptions\BadRequestException;
 use Outpost\Web\Exceptions\ClientErrorException;
 use Outpost\Web\Exceptions\ForbiddenException;
@@ -15,27 +16,35 @@ use Outpost\Web\Exceptions\UnauthorizedException;
 
 class Request implements RequestInterface {
 
-  protected $authPassword;
-  protected $authUsername;
+  /**
+   * @var AuthenticationInterface[]
+   */
+  protected $authentication = [];
+
   protected $method;
+  protected $query;
   protected $url;
 
-  public function __construct($url, $method = 'GET') {
+  public function __construct($url, $method = 'GET', array $query = []) {
     $this->url = $url;
     $this->method = $method;
+    $this->query = $query;
   }
 
-  public function authenticate($username, $password) {
-    $this->authUsername = $username;
-    $this->authPassword = $password;
+  public function addAuthentication(AuthenticationInterface $auth) {
+    $this->authentication[] = $auth;
   }
 
-  public function getAuthenticationPassword() {
-    return $this->authPassword;
+  public function getAuthentication() {
+    return $this->authentication;
   }
 
-  public function getAuthenticationUsername() {
-    return $this->authUsername;
+  public function getQueryVariables() {
+    $query = $this->query;
+    foreach ($this->getAuthentication() as $auth) {
+      $query += $auth->getQueryVariables();
+    }
+    return $query;
   }
 
   public function getRequestBody() {
@@ -44,7 +53,9 @@ class Request implements RequestInterface {
 
   public function getRequestHeaders() {
     $headers = [];
-    $headers += $this->makeAuthenticationHeaders();
+    foreach ($this->authentication as $auth) {
+      $headers += $auth->getHeaders();
+    }
     return $headers;
   }
 
@@ -57,15 +68,14 @@ class Request implements RequestInterface {
   }
 
   public function getRequestUrl() {
-    return $this->url;
+    $url = $this->getUrl();
+    $query = $this->getQueryVariables();
+    if (!empty($query)) $url .= '?' . http_build_query($query);
+    return $url;
   }
 
-  public function makeAuthenticationHeaders() {
-    $headers = [];
-    $username = $this->getAuthenticationUsername();
-    $password = $this->getAuthenticationPassword();
-    if ($username && $password) $headers['Authorization'] = 'Basic ' . base64_encode("$username:$password");
-    return $headers;
+  public function getUrl() {
+    return $this->url;
   }
 
   public function processResponse(ResponseInterface $response) {

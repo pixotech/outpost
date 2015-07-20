@@ -20,6 +20,12 @@ interface ClientInterface {
 
   /**
    * @var RequestInterface $request
+   * @return \GuzzleHttp\Message\RequestInterface
+   */
+  public function makeRequest(RequestInterface $request);
+
+  /**
+   * @var RequestInterface $request
    * @return mixed
    */
   public function send(RequestInterface $request);

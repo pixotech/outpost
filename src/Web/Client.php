@@ -35,6 +35,19 @@ class Client implements ClientInterface {
 
   /**
    * @param RequestInterface $request
+   * @return \GuzzleHttp\Message\Request
+   */
+  public function makeRequest(RequestInterface $request) {
+    $method = $request->getRequestMethod();
+    $url = $request->getRequestUrl();
+    $headers = $request->getRequestHeaders();
+    $body = $request->getRequestBody();
+    $options = $request->getRequestOptions();
+    return new \GuzzleHttp\Message\Request($method, $url, $headers, $body, $options);
+  }
+
+  /**
+   * @param RequestInterface $request
    * @return mixed
    */
   public function send(RequestInterface $request) {
@@ -48,19 +61,6 @@ class Client implements ClientInterface {
    * @return \GuzzleHttp\Message\ResponseInterface
    */
   protected function getClientResponse(RequestInterface $request) {
-    return $this->getClient()->send($this->makeClientRequest($request));
-  }
-
-  /**
-   * @param RequestInterface $request
-   * @return \GuzzleHttp\Message\Request
-   */
-  protected function makeClientRequest(RequestInterface $request) {
-    $method = $request->getRequestMethod();
-    $url = $request->getRequestUrl();
-    $headers = $request->getRequestHeaders();
-    $body = $request->getRequestBody();
-    $options = $request->getRequestOptions();
-    return new \GuzzleHttp\Message\Request($method, $url, $headers, $body, $options);
+    return $this->getClient()->send($this->makeRequest($request));
   }
 }

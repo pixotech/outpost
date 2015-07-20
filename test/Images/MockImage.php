@@ -9,15 +9,14 @@
 
 namespace Outpost\Images;
 
-use Outpost\Assets\StorageInterface;
-use Outpost\Assets\FileInterface;
+use Outpost\SiteInterface;
 
 class MockImage implements ImageInterface {
 
   public $alt = '';
   public $key;
 
-  public function generate(FileInterface $file, StorageInterface $storage) {
+  public function generate(SiteInterface $site, \SplFileInfo $file) {
 
   }
 

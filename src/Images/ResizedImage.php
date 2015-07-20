@@ -9,10 +9,9 @@
 
 namespace Outpost\Images;
 
-use Outpost\Assets\StorageInterface;
-use Outpost\Assets\FileInterface;
 use Outpost\Images\Imagemagick\Geometry\Dimensions;
 use Outpost\Images\Imagemagick\Geometry\DimensionsWithOffset;
+use Outpost\SiteInterface;
 
 class ResizedImage extends Image {
 
@@ -26,11 +25,11 @@ class ResizedImage extends Image {
     $this->height = $height;
   }
 
-  public function generate(FileInterface $file, StorageInterface $storage) {
-    $source = $storage->getFile($this->getImage())->getPath();
+  public function generate(SiteInterface $site, \SplFileInfo $file) {
+    $source = $site->getAssetFile($this->getImage())->getPathname();
     $size = $this->getDimensions();
     $crop = $this->getCroppingDimensions();
-    $path = $file->getPath();
+    $path = $file->getPathname();
     $command = "convert $source -resize $size -gravity center -crop $crop +repage $path";
     exec($command);
   }

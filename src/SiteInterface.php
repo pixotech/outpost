@@ -9,18 +9,54 @@
 
 namespace Outpost;
 
+use Outpost\Assets\AssetInterface;
 use Outpost\Environments\EnvironmentInterface;
 use Outpost\Cache\CacheableInterface;
+use Outpost\Events\EventInterface;
 use Outpost\Resources\ResourceInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 interface SiteInterface {
 
   /**
+   * @param string $key
+   */
+  public function clearAssetMarker($key);
+
+  /**
+   * @param AssetInterface $asset
+   */
+  public function createAssetMarker(AssetInterface $asset);
+
+  /**
    * @param callable $resource
    * @return mixed
    */
   public function get(callable $resource);
+
+  /**
+   * @param AssetInterface $asset
+   * @return \SplFileInfo
+   */
+  public function getAssetFile(AssetInterface $asset);
+
+  /**
+   * @param string $key
+   * @return AssetInterface
+   */
+  public function getAssetMarker($key);
+
+  /**
+   * @param string $key
+   * @return string
+   */
+  public function getAssetMarkerPath($key);
+
+  /**
+   * @param AssetInterface $asset
+   * @return string
+   */
+  public function getAssetUrl(AssetInterface $asset);
 
   /**
    * @return \Outpost\Cache\CacheInterface
@@ -42,6 +78,11 @@ interface SiteInterface {
    */
   public function getLog();
 
+  /**
+   * @return string
+   */
+  public function getPublicDirectory();
+
     /**
    * @param string $name
    * @return mixed
@@ -58,6 +99,23 @@ interface SiteInterface {
    * @return \Twig_Environment
    */
   public function getTwig();
+
+  /**
+   * @param EventInterface $event
+   */
+  public function handleEvent(EventInterface $event);
+
+  /**
+   * @param string $key
+   * @return bool
+   */
+  public function hasAssetMarker($key);
+
+  /**
+   * @param AssetInterface $asset
+   * @return bool
+   */
+  public function hasLocalAsset(AssetInterface $asset);
 
   /**
    * @param string $name

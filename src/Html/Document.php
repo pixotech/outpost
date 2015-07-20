@@ -106,7 +106,7 @@ class Document implements DocumentInterface {
   }
 
   protected function makeDocument() {
-    return $this->makeElement('html', $this->makeHead() . $this->makeBody());
+    return $this->makeElement('html', $this->makeHead() . $this->makeBody(), ['lang' => 'en']);
   }
 
   protected function makeHead() {
@@ -170,6 +170,6 @@ class Document implements DocumentInterface {
   }
 
   protected function makeTitle() {
-    return $this->makeElement('title', $this->title);
+    return $this->makeElement('title', $this->getTitle());
   }
 }

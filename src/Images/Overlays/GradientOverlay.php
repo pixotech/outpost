@@ -9,16 +9,15 @@
 
 namespace Outpost\Images\Overlays;
 
-use Outpost\Assets\FileInterface;
 use Outpost\Images\Imagemagick\Files\OutputFile;
 use Outpost\Images\Imagemagick\Geometry\Dimensions;
 
 abstract class GradientOverlay extends Overlay {
 
-  public function generate(FileInterface $file, $width, $height) {
+  public function generate(\SplFileInfo $file, $width, $height) {
     $size = new Dimensions($width, $height);
     $gradient = $this->getGradient();
-    $output = new OutputFile($file->getPath(), 'jpeg');
+    $output = new OutputFile($file->getPathname(), 'jpeg');
     $command = "convert -size $size $gradient $output";
     exec($command);
   }

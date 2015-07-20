@@ -3,6 +3,7 @@
 namespace Outpost\Resources;
 
 use Outpost\MockSite;
+use Outpost\Web\WebResource;
 
 class WebResourceTest extends \PHPUnit_Framework_TestCase {
 

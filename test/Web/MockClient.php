@@ -11,17 +11,18 @@ class MockClient implements ClientInterface {
   public $response;
 
   /**
-   * @return \Stash\Interfaces\PoolInterface
-   */
-  public function getCache() {
-    // TODO: Implement getCache() method.
-  }
-
-  /**
    * @return \GuzzleHttp\ClientInterface
    */
   public function getClient() {
     // TODO: Implement getClient() method.
+  }
+
+  /**
+   * @var RequestInterface $request
+   * @return \GuzzleHttp\Message\RequestInterface
+   */
+  public function makeRequest(RequestInterface $request) {
+    return $this->request;
   }
 
   /**

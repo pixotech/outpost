@@ -2,7 +2,9 @@
 
 namespace Outpost;
 
+use Outpost\Assets\AssetInterface;
 use Outpost\Environments\EnvironmentInterface;
+use Outpost\Events\EventInterface;
 use Outpost\Web\MockClient;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -16,11 +18,57 @@ class MockSite implements SiteInterface {
   }
 
   /**
+   * @param string $key
+   */
+  public function clearAssetMarker($key) {
+    // TODO: Implement clearAssetMarker() method.
+  }
+
+  /**
+   * @param AssetInterface $asset
+   */
+  public function createAssetMarker(AssetInterface $asset) {
+    // TODO: Implement createAssetMarker() method.
+  }
+
+  /**
    * @param callable $resource
    * @return mixed
    */
   public function get(callable $resource) {
     // TODO: Implement get() method.
+  }
+
+  /**
+   * @param AssetInterface $asset
+   * @return \SplFileInfo
+   */
+  public function getAssetFile(AssetInterface $asset) {
+    // TODO: Implement getAssetFile() method.
+  }
+
+  /**
+   * @param string $key
+   * @return AssetInterface
+   */
+  public function getAssetMarker($key) {
+    // TODO: Implement getAssetMarker() method.
+  }
+
+  /**
+   * @param string $key
+   * @return string
+   */
+  public function getAssetMarkerPath($key) {
+    // TODO: Implement getAssetMarkerPath() method.
+  }
+
+  /**
+   * @param AssetInterface $asset
+   * @return string
+   */
+  public function getAssetUrl(AssetInterface $asset) {
+    // TODO: Implement getAssetUrl() method.
   }
 
   /**
@@ -52,6 +100,13 @@ class MockSite implements SiteInterface {
   }
 
   /**
+   * @return string
+   */
+  public function getPublicDirectory() {
+    // TODO: Implement getPublicRoot() method.
+  }
+
+  /**
    * @param string $name
    * @return mixed
    */
@@ -68,10 +123,33 @@ class MockSite implements SiteInterface {
   }
 
   /**
-   * @return mixed
+   * @return \Twig_Environment
    */
   public function getTwig() {
-    return $this->twig;
+    // TODO: Implement getTwig() method.
+  }
+
+  /**
+   * @param EventInterface $event
+   */
+  public function handleEvent(EventInterface $event) {
+    // TODO: Implement handleEvent() method.
+  }
+
+  /**
+   * @param string $key
+   * @return bool
+   */
+  public function hasAssetMarker($key) {
+    // TODO: Implement hasAssetMarker() method.
+  }
+
+  /**
+   * @param AssetInterface $asset
+   * @return bool
+   */
+  public function hasLocalAsset(AssetInterface $asset) {
+    // TODO: Implement hasLocalAsset() method.
   }
 
   /**

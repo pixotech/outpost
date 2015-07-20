@@ -12,6 +12,7 @@ namespace Outpost\Images\Overlays;
 use Outpost\Assets\StorageInterface;
 use Outpost\Assets\FileInterface;
 use Outpost\Images\Image;
+use Outpost\SiteInterface;
 
 class OverlayImage extends Image {
 
@@ -25,7 +26,7 @@ class OverlayImage extends Image {
     $this->height = $height;
   }
 
-  public function generate(FileInterface $file, StorageInterface $storage) {
+  public function generate(SiteInterface $site, \SplFileInfo $file) {
     $this->getOverlay()->generate($file, $this->width, $this->height);
   }
 

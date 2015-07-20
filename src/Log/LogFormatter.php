@@ -11,25 +11,44 @@ namespace Outpost\Log;
 
 use cli\Colors;
 use Monolog\Formatter\FormatterInterface;
+use Monolog\Logger;
 
 class LogFormatter implements FormatterInterface {
 
   public function format(array $record) {
-    $str = '';
-    $lines = [];
-    if ($record['level_name'] == 'ERROR') {
-      $lines[] = sprintf("%%RError:%%n %s", $record['message']);
-      if (!empty($record['context'])) {
-        list($file, $line) = $record['context'];
-        $lines[] = "%y$file, line $line%n";
+    $time = $record['datetime']->format('H:i:s');
+    $date = $record['datetime']->format('Y-m-d');
+    $message = $record['message'];
+    $request = $this->getRequestLine($record);
+    $system = !empty($record['context']['outpost']) ? $record['context']['outpost'] : null;
+
+    if ($system == 'error') {
+      if (!empty($record['context']['exception'])) {
+        /** @var \Exception $exception */
+        $exception = $record['context']['exception'];
+        $file = $exception->getFile();
+        $line = $exception->getLine();
+      }
+      elseif (!empty($record['context']['file'])) {
+        $file = $record['context']['file'];
+        $line = $record['context']['line'];
+      }
+      if (!empty($file)) {
+        $message .= " ($file, line $line)";
       }
     }
-    else {
-      $lines[] = sprintf("[%s] %s", $record['level_name'], $record['message']);
+
+    $color = $this->getLevelColor($record['level']);
+    if ($system) {
+      $str  = $this->colorize($time, $color);
+      $str .= '  ' . $this->colorize(' ' . str_pad(strtoupper($system), 10) . ' ', $color, true);
+      $str .= '  ' . $this->colorize("$message [$request] [$date $time]", $color);
     }
-    $lines[] = $this->getRequestLine($record);
-    $str .= $this->formatLines($lines, $record['datetime']);
-    return $this->colorize($str);
+    else {
+      $str = $this->colorize("{$time}  $message [$request] [$date $time]", $color);
+    }
+    $str .= "\n";
+    return Colors::colorize($str, true);
   }
 
   public function formatBatch(array $records) {
@@ -39,25 +58,50 @@ class LogFormatter implements FormatterInterface {
     return $records;
   }
 
+  protected function getLevelColor($level) {
+    switch ($level) {
+      case Logger::WARNING:
+        return 'yellow';
+      case Logger::ERROR:
+      case Logger::CRITICAL:
+      case Logger::ALERT:
+      case Logger::EMERGENCY:
+        return 'red';
+      case Logger::DEBUG:
+      case Logger::INFO:
+      case Logger::NOTICE:
+      default:
+        return 'white';
+    }
+  }
+
   protected function getRequestLine($record) {
+    if (!isset($record['extra']['http_method'])) return null;
     $method = $record['extra']['http_method'];
     $server = $record['extra']['server'];
     $url = $record['extra']['url'];
-    return "%y{$method} {$server}{$url}%n";
+    return "{$method} {$server}{$url}";
   }
 
-  protected function colorize($string) {
-    return Colors::colorize($string, true);
-  }
-
-  protected function formatLines($lines, \DateTime $date) {
-    $output = '';
-    $timestamp = $date->format('Y-m-d H:i:s');
-    foreach ((array)$lines as $i => $line) {
-      $prefix = $i ? str_repeat(' ', strlen($timestamp)) : $timestamp;
-      $output .= "$prefix  $line\n";
+  protected function colorize($string, $color, $inverse = false) {
+    $endCode = "%n";
+    switch ($color) {
+      case 'cyan':
+        $startCode = $inverse ? "%6%K" : "%c";
+        break;
+      case 'red':
+        $startCode = $inverse ? "%1%W" : "%r";
+        break;
+      case 'yellow':
+        $startCode = $inverse ? "%3%K" : "%y";
+        break;
+      default:
+        $startCode = "%n";
     }
-    return $output . "\n";
+    return $startCode . $string . $endCode;
   }
 
+  protected function makeColoredMessage($message, $level) {
+    return isset($color) ? ($color . $message . "%n") : $message;
+  }
 }

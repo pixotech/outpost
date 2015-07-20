@@ -13,6 +13,7 @@ use Outpost\Assets\StorageInterface;
 use Outpost\Assets\FileInterface;
 use Outpost\Images\Overlays\Overlay;
 use Outpost\Images\Overlays\OverlayImage;
+use Outpost\SiteInterface;
 
 class ImageWithOverlay extends Image {
 
@@ -24,10 +25,10 @@ class ImageWithOverlay extends Image {
     $this->overlay = $overlay;
   }
 
-  public function generate(FileInterface $file, StorageInterface $storage) {
-    $image = $storage->getFile($this->getImage());
-    $overlay = $storage->getFile($this->getOverlayImage($image));
-    $command = sprintf("composite -compose %s %s %s %s", $this->getMode(), $image->getPath(), $overlay->getPath(), $file->getPath());
+  public function generate(SiteInterface $site, \SplFileInfo $file) {
+    $image = $site->getAssetFile($this->image);
+    $overlay = $site->getAssetFile($this->getOverlayImage($image));
+    $command = sprintf("composite -compose %s %s %s %s", $this->getMode(), $image->getPathname(), $overlay->getPathname(), $file->getPathname());
     exec($command);
   }
 
@@ -51,8 +52,9 @@ class ImageWithOverlay extends Image {
     return $this->overlay;
   }
 
-  protected function getOverlayImage(FileInterface $imageFile) {
-    return new OverlayImage($this->getOverlay(), $imageFile->getWidth(), $imageFile->getHeight());
+  protected function getOverlayImage(\SplFileInfo $imageFile) {
+    $info = getimagesize($imageFile->getPathname());
+    return new OverlayImage($this->getOverlay(), $info[0], $info[1]);
   }
 
   protected function getMode() {

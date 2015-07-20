@@ -9,8 +9,10 @@
 
 namespace Outpost\Assets;
 
+use Outpost\SiteInterface;
+
 interface AssetInterface {
-  public function generate(FileInterface $file, StorageInterface $storage);
+  public function generate(SiteInterface $site, \SplFileInfo $file);
   public function getExtension();
   public function getKey();
 }

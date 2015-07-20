@@ -9,9 +9,14 @@
 
 namespace Outpost;
 
+use Monolog\Logger;
+use Monolog\Processor\WebProcessor;
+use Outpost\Assets\AssetInterface;
 use Outpost\Cache\Cache;
 use Outpost\Environments\EnvironmentInterface;
 use Outpost\Cache\CacheableInterface;
+use Outpost\Events\EventInterface;
+use Outpost\Recovery\HelpResponse;
 use Outpost\Responders\ResponderInterface;
 use Outpost\Responders\Responses\RenderableResponseInterface;
 use Outpost\Responders\Responses\ResponseInterface;
@@ -41,16 +46,6 @@ class Site implements SiteInterface {
   protected $log;
 
   /**
-   * @var array
-   */
-  protected $secrets;
-
-  /**
-   * @var array
-   */
-  protected $settings;
-
-  /**
    * @var \Twig_Environment
    */
   protected $twig;
@@ -60,17 +55,17 @@ class Site implements SiteInterface {
    * @param Request $request
    */
   public static function respond(EnvironmentInterface $environment, Request $request = null) {
+    if (!isset($request)) $request = Request::createFromGlobals();
     try {
       /** @var Site $site */
       $site = new static($environment);
-      if (!isset($request)) $request = Request::createFromGlobals();
       $response = $site->invoke($request);
-      $response->prepare($request);
-      $response->send();
     }
     catch (\Exception $e) {
-      print new Recovery\HelpPage($e);
+      $response = new Response('Internal Server Error', 500);
     }
+    $response->prepare($request);
+    $response->send();
   }
 
   /**
@@ -78,8 +73,6 @@ class Site implements SiteInterface {
    */
   public function __construct(EnvironmentInterface $environment) {
     $this->environment = $environment;
-    $this->loadSettings();
-    $this->loadSecrets();
     $this->log = $this->makeLog();
     $this->cache = $this->makeCache();
     $this->client = $this->makeClient();
@@ -94,6 +87,22 @@ class Site implements SiteInterface {
   }
 
   /**
+   * @param string $key
+   */
+  public function clearAssetMarker($key) {
+    unlink($this->getAssetMarkerPath($key));
+  }
+
+  /**
+   * @param AssetInterface $asset
+   */
+  public function createAssetMarker(AssetInterface $asset) {
+    $key = $asset->getKey();
+    file_put_contents($this->getAssetMarkerPath($key), serialize($asset));
+    $this->getLog()->info("Marker created for asset $key", ['outpost' => 'assets']);
+  }
+
+  /**
    * @param callable $resource
    * @return mixed
    */
@@ -101,9 +110,49 @@ class Site implements SiteInterface {
     if ($resource instanceof CacheableInterface) {
       $key = $resource->getCacheKey();
       $lifetime = $resource->getCacheLifetime();
-      return $this->getCache()->get($key, $resource, $lifetime);
+      /** @var callable $resource */
+      $result = $this->getCache()->get($key, $resource, $lifetime);
     }
-    return call_user_func($resource, $this);
+    else {
+      $result = call_user_func($resource, $this);
+    }
+    return $result;
+  }
+
+  /**
+   * @param AssetInterface $asset
+   * @return \SplFileInfo
+   */
+  public function getAssetFile(AssetInterface $asset) {
+    if (!$this->hasLocalAsset($asset)) $this->generateAsset($asset);
+    return new \SplFileInfo($this->getLocalAssetPath($asset));
+  }
+
+  /**
+   * @param string $key
+   * @return AssetInterface
+   * @throws \OutOfBoundsException
+   */
+  public function getAssetMarker($key) {
+    $marker = $this->getAssetMarkerPath($key);
+    if (!file_exists($marker)) throw new \OutOfBoundsException("Unknown asset: $key");
+    return unserialize(file_get_contents($marker));
+  }
+
+  /**
+   * @param string $key
+   * @return string
+   */
+  public function getAssetMarkerPath($key) {
+    return $this->getEnvironment()->getAssetCacheDirectory() . '/' . $key;
+  }
+
+  /**
+   * @param AssetInterface $asset
+   * @return string
+   */
+  public function getAssetUrl(AssetInterface $asset) {
+    return "/_assets/" . $asset->getKey() . '.' . $asset->getExtension();
   }
 
   /**
@@ -135,11 +184,18 @@ class Site implements SiteInterface {
   }
 
   /**
+   * @return string
+   */
+  public function getPublicDirectory() {
+    return $this->getEnvironment()->getPublicDirectory();
+  }
+
+  /**
    * @param string $key
    * @return mixed
    */
   public function getSecret($key) {
-    return $this->getSecrets()[$key];
+    return $this->getEnvironment()->getSecret($key);
   }
 
   /**
@@ -147,7 +203,7 @@ class Site implements SiteInterface {
    * @return mixed
    */
   public function getSetting($key) {
-    return $this->getSettings()[$key];
+    return $this->getEnvironment()->getSetting($key);
   }
 
   /**
@@ -167,27 +223,47 @@ class Site implements SiteInterface {
    */
   public function handleError($level, $message, $file, $line) {
     if ($level & error_reporting()) {
-      $this->getLog()->error($message, [$file, $line]);
+      $this->getLog()->warning($message, ['outpost' => 'error', 'file' => $file, 'line' => $line]);
       if ($level & (E_ERROR | E_RECOVERABLE_ERROR | E_USER_ERROR)) {
         throw new \ErrorException($message, 0, $level, $file, $line);
       }
     }
   }
 
-  /**
-   * @param string $name
-   * @return bool
-   */
-  public function hasSetting($name) {
-    return array_key_exists($name, $this->getSettings());
+  public function handleEvent(EventInterface $event) {
+    $this->getLog()->log($event->getLogLevel(), $event->getLogMessage(), [$event]);
   }
 
   /**
-   * @param string $name
+   * @param string $key
    * @return bool
    */
-  public function hasSecret($name) {
-    return array_key_exists($name, $this->getSecrets());
+  public function hasAssetMarker($key) {
+    return file_exists($this->getAssetMarkerPath($key));
+  }
+
+  /**
+   * @param AssetInterface $asset
+   * @return bool
+   */
+  public function hasLocalAsset(AssetInterface $asset) {
+    return file_exists($this->getLocalAssetPath($asset));
+  }
+
+  /**
+   * @param string $key
+   * @return bool
+   */
+  public function hasSetting($key) {
+    return $this->getEnvironment()->hasSetting($key);
+  }
+
+  /**
+   * @param string $key
+   * @return bool
+   */
+  public function hasSecret($key) {
+    return $this->getEnvironment()->hasSecret($key);
   }
 
   /**
@@ -201,18 +277,19 @@ class Site implements SiteInterface {
     try {
       $response = $this->invokeResponders($request);
       if (!($response instanceof Response)) throw new Exceptions\InvalidResponseException($this, $request, $response);
+      #$this->record(new ResponseEvent($response));
     }
     catch (\Exception $e) {
-      $response = $this->handleRequestException($e);
+      $response = $this->handleRequestException($e, $request);
     }
-    $this->disbleErrorHandling();
+    $this->disableErrorHandling();
     return $response;
   }
 
   /**
    *
    */
-  protected function disbleErrorHandling() {
+  protected function disableErrorHandling() {
     restore_error_handler();
   }
 
@@ -221,6 +298,23 @@ class Site implements SiteInterface {
    */
   protected function enableErrorHandling() {
     set_error_handler([$this, 'handleError']);
+  }
+
+  /**
+   * @param AssetInterface $asset
+   * @throws \Exception
+   */
+  protected function generateAsset(AssetInterface $asset) {
+    $file = new \SplFileInfo($this->getLocalAssetPath($asset));
+    $asset->generate($this, $file);
+  }
+
+  /**
+   * @param AssetInterface $asset
+   * @return string
+   */
+  protected function getLocalAssetPath(AssetInterface $asset) {
+    return $this->getEnvironment()->getGeneratedAssetsDirectory() . '/' . $asset->getKey() . '.' . $asset->getExtension();
   }
 
   /**
@@ -234,28 +328,15 @@ class Site implements SiteInterface {
    * @return \Monolog\Handler\HandlerInterface[]
    */
   protected function getLogProcessors() {
-    return [new \Monolog\Processor\WebProcessor()];
+    return [new WebProcessor()];
   }
 
   /**
+   * @var mixed $request
    * @return ResponderInterface[]
    */
   protected function getResponders($request) {
     return [];
-  }
-
-  /**
-   * @return array
-   */
-  protected function getSecrets() {
-    return $this->secrets;
-  }
-
-  /**
-   * @return array
-   */
-  protected function getSettings() {
-    return $this->settings;
   }
 
   protected function getTwigLoader() {
@@ -268,11 +349,12 @@ class Site implements SiteInterface {
 
   /**
    * @param \Exception $exception
+   * @param Request $request
    * @return Recovery\HelpResponse
    */
-  protected function handleRequestException(\Exception $exception) {
+  protected function handleRequestException(\Exception $exception, Request $request) {
     $this->logException($exception);
-    return new Recovery\HelpResponse($exception);
+    return $this->makeErrorResponse($exception, $request);
   }
 
   /**
@@ -286,10 +368,7 @@ class Site implements SiteInterface {
     if (!is_array($responders)) $responders = [$responders];
     foreach ($responders as $responder) {
       try {
-        $response = $responder->invoke();
-        if ($response instanceof RenderableResponseInterface) $response = $response->render($this->getTwig());
-        if ($response instanceof ResponseInterface) $response = $this->makeResponse($response);
-        if (is_string($response)) $response = new Response($response);
+        $response = $this->processResponse($responder->invoke());
         return $response;
       }
       catch (Responders\Exceptions\UnrecognizedRequestException $e) {
@@ -300,35 +379,11 @@ class Site implements SiteInterface {
   }
 
   /**
-   * @param $name
-   * @return array
-   */
-  protected function loadConfiguration($name) {
-    $path = $this->makeConfigurationPath($name);
-    if (!is_file($path) || !is_readable($path)) return [];
-    return $this->parseConfiguration(file_get_contents($path));
-  }
-
-  /**
-   *
-   */
-  protected function loadSecrets() {
-    $this->secrets = $this->loadConfiguration('secrets');
-  }
-
-  /**
-   *
-   */
-  protected function loadSettings() {
-    $this->settings = $this->loadConfiguration('settings');
-  }
-
-  /**
    * @param \Exception $e
    */
   protected function logException(\Exception $e) {
     $message = $e->getMessage() ?: get_class($e);
-    $this->getLog()->critical($message, [$e->getFile(), $e->getLine()]);
+    $this->getLog()->critical($message, ['outpost' => 'error', 'exception' => $e]);
   }
 
   /**
@@ -349,18 +404,19 @@ class Site implements SiteInterface {
   }
 
   /**
-   * @param string $name The name of the configuration file
-   * @return string The path to the configuration file
+   * @param \Exception $error
+   * @param Request $request
+   * @return Recovery\HelpResponse
    */
-  protected function makeConfigurationPath($name) {
-    return $this->getEnvironment()->getRootDirectory() . "/{$name}.json";
+  protected function makeErrorResponse(\Exception $error, Request $request) {
+    return new HelpResponse($error);
   }
 
   /**
    * @return \Monolog\Logger
    */
   protected function makeLog() {
-    return new \Monolog\Logger('outpost', $this->getLogHandlers(), $this->getLogProcessors());
+    return new Logger('outpost', $this->getLogHandlers(), $this->getLogProcessors());
   }
 
   /**
@@ -378,11 +434,10 @@ class Site implements SiteInterface {
     return new \Twig_Environment($this->getTwigLoader(), $this->getTwigOptions());
   }
 
-  /**
-   * @param string $config The content of the configuration file
-   * @return array
-   */
-  protected function parseConfiguration($config) {
-    return json_decode($config, true) ?: [];
+  protected function processResponse($response) {
+    if ($response instanceof RenderableResponseInterface) $response = $response->render($this->getTwig());
+    if ($response instanceof ResponseInterface) $response = $this->makeResponse($response);
+    if (is_string($response)) $response = new Response($response);
+    return $response;
   }
 }

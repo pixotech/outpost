@@ -19,16 +19,6 @@ class RequestTest extends \PHPUnit_Framework_TestCase {
     $this->assertEquals($method, $request->getRequestMethod());
   }
 
-  public function testAuthenticatedRequest() {
-    $username = 'this is the username';
-    $password = 'this is the password';
-    $request = new Request(null);
-    $request->authenticate($username, $password);
-    $headers = $request->getRequestHeaders();
-    $this->assertFalse(empty($headers['Authorization']));
-    $this->assertEquals('Basic ' . base64_encode("$username:$password"), $headers['Authorization']);
-  }
-
   public function testProcessRequest() {
     $body = 'this is the response body';
     $request = new Request(null);

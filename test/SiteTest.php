@@ -10,14 +10,29 @@
 namespace Outpost;
 
 use Monolog\Handler\TestHandler;
+use Outpost\Assets\MockAsset;
 use Outpost\Environments\MockEnvironment;
+use Outpost\Resources\MockCacheableResource;
 use Stash\Driver\Ephemeral;
 
 class SiteTest extends \PHPUnit_Framework_TestCase {
 
-  public function testCreateSite() {
+  public function testGetAssetMarkerPath() {
+    $path = "assetPath";
+    $key = "assetKey";
     $environment = $this->makeEnvironment();
-    new Site($environment);
+    $environment->assetCacheDirectory = $path;
+    $site = new Site($environment);
+    $this->assertEquals("$path/$key", $site->getAssetMarkerPath($key));
+  }
+
+  public function testGetAssetUrl() {
+    $key = "assetKey";
+    $ext = "ext";
+    $environment = $this->makeEnvironment();
+    $site = new Site($environment);
+    $asset = new MockAsset($key, $ext);
+    $this->assertEquals("/_assets/$key.$ext", $site->getAssetUrl($asset));
   }
 
   public function testGetSiteCache() {
@@ -46,7 +61,6 @@ class SiteTest extends \PHPUnit_Framework_TestCase {
 
   public function testGetSiteLog() {
     $environment = $this->makeEnvironment();
-    $environment->logHandlers = [new TestHandler()];
     $site = new Site($environment);
     $this->assertInstanceOf("Monolog\\Logger", $site->getLog());
     /** @var \Monolog\Logger $log */
@@ -54,12 +68,36 @@ class SiteTest extends \PHPUnit_Framework_TestCase {
     $this->assertEquals($environment->logHandlers, $log->getHandlers());
   }
 
-  protected function makeTestSiteDirectory() {
-
+  public function testGetResource() {
+    $environment = $this->makeEnvironment();
+    $site = new Site($environment);
+    $resourceSite = null;
+    $result = "This is the resource result";
+    $resource = function ($site) use ($result, &$resourceSite) { $resourceSite = $site; return $result; };
+    $this->assertEquals($result, $site->get($resource));
+    $this->assertEquals($site, $resourceSite);
   }
 
-  protected function makeTestSiteDirectoryName() {
-    return uniqid('outpost-testsite-');
+  public function testGetCacheableResource() {
+    $environment = $this->makeEnvironment();
+    $site = new Site($environment);
+    $result = "This is the resource result";
+    $key = "test/key";
+    $resource = new MockCacheableResource($result, $key);
+    $this->assertEquals($result, $site->get($resource));
+  }
+
+  public function testGetCachedResource() {
+    $environment = $this->makeEnvironment();
+    $site = new Site($environment);
+    $result = "This is the uncached result";
+    $cached = "This is the cached result";
+    $key = "test/key";
+    $lifetime = 600;
+    $resource = new MockCacheableResource($result, $key, $lifetime);
+    $item = $site->getCache()->getCache()->getItem($key);
+    $item->set($cached, $lifetime);
+    $this->assertEquals($cached, $site->get($resource));
   }
 
   /**
@@ -68,6 +106,7 @@ class SiteTest extends \PHPUnit_Framework_TestCase {
   protected function makeEnvironment() {
     $environment = new MockEnvironment();
     $environment->cacheDriver = new Ephemeral();
+    $environment->logHandlers = [new TestHandler()];
     return $environment;
   }
 }

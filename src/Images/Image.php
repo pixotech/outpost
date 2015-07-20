@@ -9,7 +9,9 @@
 
 namespace Outpost\Images;
 
-abstract class Image implements ImageInterface {
+use Outpost\Assets\Asset;
+
+abstract class Image extends Asset implements ImageInterface {
 
   protected $alt;
 

@@ -29,7 +29,7 @@ abstract class Responder implements ResponderInterface {
   }
 
   /**
-   * @return \Stash\Interfaces\PoolInterface
+   * @return \Outpost\Cache\CacheInterface
    */
   public function getCache() {
     return $this->site->getCache();
@@ -80,7 +80,7 @@ abstract class Responder implements ResponderInterface {
   /**
    * @return Response
    */
-  abstract function invoke();
+  abstract public function invoke();
 
   protected function makeDocument($body, $title = null) {
     return new Document($body, $title);

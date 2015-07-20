@@ -15,10 +15,13 @@ use Symfony\Component\HttpFoundation\Request;
 
 class MockEnvironment implements EnvironmentInterface {
 
+  public $assetCacheDirectory;
   public $cacheDriver;
   public $logHandlers = [];
   public $request;
   public $root;
+  public $secrets = [];
+  public $settings = [];
   public $twigLoader;
   public $twigOptions = [];
 
@@ -31,10 +34,24 @@ class MockEnvironment implements EnvironmentInterface {
   }
 
   /**
+   * @return string
+   */
+  public function getAssetCacheDirectory() {
+    return $this->assetCacheDirectory;
+  }
+
+  /**
    * @return null|\Stash\Interfaces\DriverInterface
    */
   public function getCacheDriver() {
     return $this->cacheDriver;
+  }
+
+  /**
+   * @return string
+   */
+  public function getGeneratedAssetsDirectory() {
+    // TODO: Implement getGeneratedAssetsDirectory() method.
   }
 
   /**
@@ -45,30 +62,83 @@ class MockEnvironment implements EnvironmentInterface {
   }
 
   /**
+   * @return string
+   */
+  public function getPublicDirectory() {
+    // TODO: Implement getPublicDirectory() method.
+  }
+
+  /**
    * @return Request
    */
   public function getRequest() {
-    return $this->request;
+    // TODO: Implement getRequest() method.
   }
 
   /**
    * @return string
    */
   public function getRootDirectory() {
-    return $this->root;
+    // TODO: Implement getRootDirectory() method.
   }
 
   /**
+   * @param string $name
    * @return mixed
    */
+  public function getSetting($name) {
+    return $this->settings[$name];
+  }
+
+  /**
+   * @return array
+   */
+  public function getSettings() {
+    return $this->settings;
+  }
+
+  /**
+   * @param string $name
+   * @return mixed
+   */
+  public function getSecret($name) {
+    return $this->secrets[$name];
+  }
+
+  /**
+   * @return array
+   */
+  public function getSecrets() {
+    return $this->secrets;
+  }
+
+  /**
+   * @return \Twig_LoaderInterface
+   */
   public function getTwigLoader() {
-    return $this->twigLoader;
+    // TODO: Implement getTwigLoader() method.
   }
 
   /**
    * @return array
    */
   public function getTwigOptions() {
-    return $this->twigOptions;
+    // TODO: Implement getTwigOptions() method.
+  }
+
+  /**
+   * @param string $name
+   * @return bool
+   */
+  public function hasSetting($name) {
+    return isset($this->settings[$name]);
+  }
+
+  /**
+   * @param string $name
+   * @return bool
+   */
+  public function hasSecret($name) {
+    return isset($this->secrets[$name]);
   }
 }

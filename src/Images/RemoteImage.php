@@ -9,18 +9,15 @@
 
 namespace Outpost\Images;
 
-use Outpost\Assets\StorageInterface;
-use Outpost\Assets\FileInterface;
-use Outpost\Web\ClientInterface;
+use Outpost\SiteInterface;
 use Outpost\Web\Requests\FileRequest;
 
 class RemoteImage extends Image {
 
   protected $url;
 
-  public function __construct(ClientInterface $client, $url, $alt = '') {
+  public function __construct($url, $alt = '') {
     parent::__construct($alt);
-    $this->client = $client;
     $this->url = $url;
   }
 
@@ -32,18 +29,14 @@ class RemoteImage extends Image {
     return self::makeKey(__CLASS__, $this->url);
   }
 
-  public function generate(FileInterface $file, StorageInterface $storage) {
-    $body = $this->getClient()->send($this->makeRequest());
-    $fp = fopen($file->getPath(), 'wb');
+  public function generate(SiteInterface $site, \SplFileInfo $file) {
+    $body = $site->getClient()->send($this->makeRequest());
+    $fp = fopen($file->getPathname(), 'wb');
     while (!$body->eof()) fwrite($fp, $body->read(1024));
     fclose($fp);
   }
 
   public function makeRequest() {
     return new FileRequest($this->url);
-  }
-
-  protected function getClient() {
-    return $this->client;
   }
 }
