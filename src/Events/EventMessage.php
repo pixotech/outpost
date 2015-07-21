@@ -23,9 +23,9 @@ class EventMessage {
 
   public function toString($color = true) {
     $timestamp = $this->getTimestamp();
-    $location = $this->getLocation();
+    $location = strtoupper($this->event->getLocation());
     $message = $this->event->getLogMessage();
-    return "$timestamp  $location  $message";
+    return "$timestamp  %_{$location}:%n $message";
   }
 
   public function getLocation() {
@@ -33,9 +33,29 @@ class EventMessage {
   }
 
   public function getTimestamp() {
-    $date = $this->event->getTime()->format('Y-m-d');
+    $color = $this->event->getColor();
+    switch ($color) {
+      case self::BLACK_ON_CYAN:
+      case self::WHITE_ON_CYAN:
+        $color2 = '%c';
+        break;
+      case self::BLACK_ON_GREEN:
+      case self::WHITE_ON_GREEN:
+        $color2 = '%g';
+        break;
+      case self::BLACK_ON_YELLOW:
+      case self::WHITE_ON_YELLOW:
+        $color2 = '%y';
+        break;
+      case self::WHITE_ON_RED:
+        $color2 = '%r';
+        break;
+      default:
+        $color2 = '';
+    }
+    $date = $this->event->getTime()->format('ymd');
     $clock = $this->event->getTime()->format('H:i:s');
     $micro = $this->event->getTime()->format('u');
-    return "%c{$date}%n %W{$clock}%n%c.{$micro}%n";
+    return "{$color2}{$date}%n {$color} {$clock} %n {$color2}{$micro}%n";
   }
 }
