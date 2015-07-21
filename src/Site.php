@@ -15,7 +15,10 @@ use Outpost\Assets\AssetInterface;
 use Outpost\Cache\Cache;
 use Outpost\Environments\EnvironmentInterface;
 use Outpost\Cache\CacheableInterface;
+use Outpost\Events\ErrorEvent;
 use Outpost\Events\EventInterface;
+use Outpost\Events\ExceptionEvent;
+use Outpost\Events\RequestReceivedEvent;
 use Outpost\Recovery\HelpResponse;
 use Outpost\Responders\ResponderInterface;
 use Outpost\Responders\Responses\RenderableResponseInterface;
@@ -223,9 +226,11 @@ class Site implements SiteInterface {
    */
   public function handleError($level, $message, $file, $line) {
     if ($level & error_reporting()) {
-      $this->getLog()->warning($message, ['outpost' => 'error', 'file' => $file, 'line' => $line]);
       if ($level & (E_ERROR | E_RECOVERABLE_ERROR | E_USER_ERROR)) {
         throw new \ErrorException($message, 0, $level, $file, $line);
+      }
+      else {
+        $this->handleEvent(new ErrorEvent($level, $message, $file, $line));
       }
     }
   }
@@ -272,6 +277,7 @@ class Site implements SiteInterface {
    * @throws \Exception
    */
   public function invoke(Request $request = null) {
+    $this->handleEvent(new RequestReceivedEvent($request));
     if (!isset($request)) $request = $this->getEnvironment()->getRequest();
     $this->enableErrorHandling();
     try {
@@ -353,7 +359,7 @@ class Site implements SiteInterface {
    * @return Recovery\HelpResponse
    */
   protected function handleRequestException(\Exception $exception, Request $request) {
-    $this->logException($exception);
+    $this->handleEvent(new ExceptionEvent($exception));
     return $this->makeErrorResponse($exception, $request);
   }
 
@@ -379,14 +385,6 @@ class Site implements SiteInterface {
   }
 
   /**
-   * @param \Exception $e
-   */
-  protected function logException(\Exception $e) {
-    $message = $e->getMessage() ?: get_class($e);
-    $this->getLog()->critical($message, ['outpost' => 'error', 'exception' => $e]);
-  }
-
-  /**
    * @param null|string $ns Namespace
    * @return \Outpost\Cache\Cache
    */
@@ -400,7 +398,7 @@ class Site implements SiteInterface {
    */
   protected function makeClient() {
     $client = new \GuzzleHttp\Client();
-    return new Web\Client($client);
+    return new Web\Client($this, $client);
   }
 
   /**

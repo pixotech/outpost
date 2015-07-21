@@ -10,6 +10,7 @@
 namespace Outpost\Web;
 
 use GuzzleHttp\ClientInterface as GuzzleClientInterface;
+use Outpost\SiteInterface;
 use Outpost\Web\Requests\RequestInterface;
 
 class Client implements ClientInterface {
@@ -19,10 +20,13 @@ class Client implements ClientInterface {
    */
   protected $client;
 
+  protected $site;
+
   /**
    * @param GuzzleClientInterface $client
    */
-  public function __construct(GuzzleClientInterface $client) {
+  public function __construct(SiteInterface $site, GuzzleClientInterface $client) {
+    $this->site = $site;
     $this->client = $client;
   }
 
@@ -51,9 +55,11 @@ class Client implements ClientInterface {
    * @return mixed
    */
   public function send(RequestInterface $request) {
+    $this->site->handleEvent(new NewRequestEvent($request));
     $response = $this->getClientResponse($request);
     $request->validateResponse($response);
-    return $request->processResponse($response);
+    $response = $request->processResponse($response);
+    $this->site->handleEvent(new ResponseReceivedEvent($response, $request));
   }
 
   /**
