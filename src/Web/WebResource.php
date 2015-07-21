@@ -15,6 +15,10 @@ class WebResource implements WebResourceInterface {
     $this->method = $method;
   }
 
+  public function __invoke(SiteInterface $site) {
+    return $this->invoke($site);
+  }
+
   public function getRequestMethod() {
     return $this->method;
   }
@@ -28,10 +32,6 @@ class WebResource implements WebResourceInterface {
 
   public function getRequestUrl() {
     return $this->url;
-  }
-
-  public function __invoke(SiteInterface $site) {
-    return $this->invoke($site);
   }
 
   public function invoke(SiteInterface $site) {

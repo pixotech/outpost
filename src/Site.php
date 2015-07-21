@@ -11,7 +11,9 @@ namespace Outpost;
 
 use Monolog\Logger;
 use Monolog\Processor\WebProcessor;
+use Outpost\Assets\AssetGeneratedEvent;
 use Outpost\Assets\AssetInterface;
+use Outpost\Assets\MarkerCreatedEvent;
 use Outpost\Cache\Cache;
 use Outpost\Environments\EnvironmentInterface;
 use Outpost\Cache\CacheableInterface;
@@ -19,6 +21,7 @@ use Outpost\Events\ErrorEvent;
 use Outpost\Events\EventInterface;
 use Outpost\Events\ExceptionEvent;
 use Outpost\Events\RequestReceivedEvent;
+use Outpost\Events\ResponseCompleteEvent;
 use Outpost\Recovery\HelpResponse;
 use Outpost\Responders\ResponderInterface;
 use Outpost\Responders\Responses\RenderableResponseInterface;
@@ -102,7 +105,7 @@ class Site implements SiteInterface {
   public function createAssetMarker(AssetInterface $asset) {
     $key = $asset->getKey();
     file_put_contents($this->getAssetMarkerPath($key), serialize($asset));
-    $this->getLog()->info("Marker created for asset $key", ['outpost' => 'assets']);
+    $this->handleEvent(new MarkerCreatedEvent($asset));
   }
 
   /**
@@ -236,7 +239,7 @@ class Site implements SiteInterface {
   }
 
   public function handleEvent(EventInterface $event) {
-    $this->getLog()->log($event->getLogLevel(), $event->getLogMessage(), [$event]);
+    $this->getLog()->log($event->getLogLevel(), $event->getLogMessage(), ['event' => $event]);
   }
 
   /**
@@ -283,7 +286,7 @@ class Site implements SiteInterface {
     try {
       $response = $this->invokeResponders($request);
       if (!($response instanceof Response)) throw new Exceptions\InvalidResponseException($this, $request, $response);
-      #$this->record(new ResponseEvent($response));
+      $this->handleEvent(new ResponseCompleteEvent($response, $request));
     }
     catch (\Exception $e) {
       $response = $this->handleRequestException($e, $request);
@@ -313,6 +316,7 @@ class Site implements SiteInterface {
   protected function generateAsset(AssetInterface $asset) {
     $file = new \SplFileInfo($this->getLocalAssetPath($asset));
     $asset->generate($this, $file);
+    $this->handleEvent(new AssetGeneratedEvent($asset));
   }
 
   /**

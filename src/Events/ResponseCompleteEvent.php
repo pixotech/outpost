@@ -14,7 +14,7 @@ class ResponseCompleteEvent extends Event {
   }
 
   public function getColor() {
-    return EventMessage::WHITE_ON_GREEN;
+    return EventMessage::BLACK_ON_CYAN;
   }
 
   public function getLocation() {

@@ -4,6 +4,10 @@ namespace Outpost\Events;
 
 class EventMessage {
 
+  const BLACK_ON_CYAN = '%6%K';
+  const BLACK_ON_GREEN = '%2%K';
+  const BLACK_ON_YELLOW = '%3%K';
+  const WHITE_ON_BLUE = '%4%W';
   const WHITE_ON_CYAN = '%6%W';
   const WHITE_ON_GREEN = '%2%W';
   const WHITE_ON_RED = '%1%W';
@@ -21,7 +25,7 @@ class EventMessage {
     $timestamp = $this->getTimestamp();
     $location = $this->getLocation();
     $message = $this->event->getLogMessage();
-    return "$timestamp $location $message";
+    return "$timestamp  $location  $message";
   }
 
   public function getLocation() {
@@ -29,8 +33,9 @@ class EventMessage {
   }
 
   public function getTimestamp() {
+    $date = $this->event->getTime()->format('Y-m-d');
     $clock = $this->event->getTime()->format('H:i:s');
     $micro = $this->event->getTime()->format('u');
-    return "%w{$clock}%n%c.{$micro}%n";
+    return "%c{$date}%n %W{$clock}%n%c.{$micro}%n";
   }
 }

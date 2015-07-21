@@ -7,26 +7,21 @@ use Outpost\Events\Event;
 
 abstract class CacheEvent extends Event {
 
-  /**
-   * @var CacheableInterface
-   */
-  protected $item;
+  protected $key;
 
-  public function __construct(CacheableInterface $item) {
+  public function __construct($key, $callback, $lifetime) {
     parent::__construct();
-    $this->item = $item;
-  }
-
-  public function getItem() {
-    return $this->item;
+    $this->key = $key;
+    $this->callback = $key;
+    $this->lifetime = $lifetime;
   }
 
   public function getItemKey() {
-    return $this->getItem()->getCacheKey();
+    return $this->key;
   }
 
   public function getItemLifetime() {
-    return $this->getItem()->getCacheLifetime();
+    return $this->lifetime;
   }
 
   public function getLocation() {

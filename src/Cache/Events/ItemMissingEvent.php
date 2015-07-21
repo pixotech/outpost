@@ -4,13 +4,13 @@ namespace Outpost\Cache\Events;
 
 use Outpost\Events\EventMessage;
 
-class CachedItemFoundEvent extends CacheEvent {
+class ItemMissingEvent extends CacheEvent {
 
   public function getColor() {
-    return EventMessage::WHITE_ON_CYAN;
+    return EventMessage::WHITE_ON_YELLOW;
   }
 
   public function getLogMessage() {
-    return sprintf("Found: %s", $this->getItemKey());
+    return sprintf("Not found: %s", $this->getItemKey());
   }
 }

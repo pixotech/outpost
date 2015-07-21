@@ -16,7 +16,11 @@ class ErrorEvent extends Event {
     return EventMessage::WHITE_ON_RED;
   }
 
+  public function getLocation() {
+    return "Error";
+  }
+
   public function getLogMessage() {
-    return $this->message;
+    return sprintf("%s (%s, line %s)", $this->message, $this->file, $this->line);
   }
 }

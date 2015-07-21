@@ -19,10 +19,13 @@ class ExceptionEvent extends Event {
   }
 
   public function getLocation() {
-    return "Error";
+    return "Exception";
   }
 
   public function getLogMessage() {
+    if ($this->exception->getFile()) {
+      return sprintf("%s (%s, line %s)", $this->exception->getMessage(), $this->exception->getFile(), $this->exception->getLine());
+    }
     return $this->exception->getMessage();
   }
 }

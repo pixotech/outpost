@@ -57,9 +57,9 @@ class Client implements ClientInterface {
   public function send(RequestInterface $request) {
     $this->site->handleEvent(new NewRequestEvent($request));
     $response = $this->getClientResponse($request);
-    $request->validateResponse($response);
-    $response = $request->processResponse($response);
     $this->site->handleEvent(new ResponseReceivedEvent($response, $request));
+    $request->validateResponse($response);
+    return $request->processResponse($response);
   }
 
   /**

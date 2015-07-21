@@ -12,10 +12,21 @@ namespace Outpost\Log;
 use cli\Colors;
 use Monolog\Formatter\FormatterInterface;
 use Monolog\Logger;
+use Outpost\Events\EventMessage;
 
 class LogFormatter implements FormatterInterface {
 
   public function format(array $record) {
+
+    if (!empty($record['context'])) {
+      $context = $record['context'];
+      if (!empty($context['event'])) {
+        $message = new EventMessage($context['event']);
+        Colors::enable();
+        return Colors::colorize($message->toString() . "\n");
+      }
+    }
+
     $time = $record['datetime']->format('H:i:s');
     $date = $record['datetime']->format('Y-m-d');
     $message = $record['message'];
