@@ -81,7 +81,7 @@ class Environment implements EnvironmentInterface {
   }
 
   public function getPublicDirectory($ensure = true) {
-    $dir = $this->getRootDirectory() . '/docroot';
+    $dir = $this->getRootDirectory() . '/public';
     if ($ensure) $this->ensureDirectory($dir);
     return $dir;
   }
