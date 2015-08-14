@@ -35,8 +35,17 @@ composer up
 Create quickstart/src/Site.php
 ```php
 <?php
+
 namespace Quickstart;
+
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
 class Site extends \Outpost\Site {
+
+  public function getResponse(Request $request) {
+    return new Response("Hello");
+  }
 }
 ```
 
@@ -52,10 +61,18 @@ Create quickstart/public/index.php
 
 ```php
 <?php
+
 namespace Quickstart;
-require_once "../vendor/autoload.php";
-$environment = new \Outpost\Environments\DevelopmentEnvironment(__DIR__ . "/..");
-Site::respond($environment);
+
+use Outpost\Environments\DevelopmentEnvironment;
+use Symfony\Component\HttpFoundation\Request;
+
+require_once __DIR__ . '/../../outpost/vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$request = Request::createFromGlobals();
+$site = new Site(new DevelopmentEnvironment(__DIR__ . '/..'));
+$site->respond($request);
 ```
 
 Start a local webserver:
@@ -68,40 +85,8 @@ Visit the site in a browser:
 
 [http://localhost:8080/](http://localhost:8080/)
 
-Outpost says it doesn't recognize the request.
 
-## Add a responder
-
-Create a directory for responders:
-
-```sh
-mkdir quickstart/src/Responders
-```
-
-Create quickstart/src/Responders/Responder.php
-```php
-<?php
-namespace Quickstart\Responders;
-class Responder extends \Outpost\Responders\Responder {
-  function invoke() {
-    return $this->makeResponse("Hello");
-  }
-}
-```
-
-Tell the site to use the new responder.
-
-Change quickstart/src/Site.php
-
-```php
-class Site extends \Outpost\Site {
-  protected function getResponders($request) {
-    return [new Responders\Responder($this, $request)];
-  }
-}
-```
-
-Reload the page. You should see:
+You should see:
 
 ```
 Hello
