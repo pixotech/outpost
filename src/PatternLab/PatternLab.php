@@ -4,7 +4,7 @@ namespace Outpost\PatternLab;
 
 use Outpost\Cache\CacheableInterface;
 use Outpost\PatternLab\PatternNotFoundException;
-use Outpost\Resources\ResourceInterface;
+use Outpost\ResourceInterface;
 use Outpost\SiteInterface;
 
 class PatternLab implements PatternLabInterface, CacheableInterface, ResourceInterface {

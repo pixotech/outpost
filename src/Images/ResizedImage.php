@@ -20,13 +20,14 @@ class ResizedImage extends Image {
   protected $width;
 
   public function __construct(ImageInterface $image, $width, $height) {
+    parent::__construct();
     $this->image = $image;
     $this->width = $width;
     $this->height = $height;
   }
 
   public function generate(SiteInterface $site, \SplFileInfo $file) {
-    $source = $site->getAssetFile($this->getImage())->getPathname();
+    $source = $site->getAssetManager()->getAssetFile($this->getImage())->getPathname();
     $size = $this->getDimensions();
     $crop = $this->getCroppingDimensions();
     $path = $file->getPathname();

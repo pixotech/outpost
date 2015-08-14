@@ -16,6 +16,11 @@ interface EnvironmentInterface {
   /**
    * @return string
    */
+  public function getAssetBaseUrl();
+
+  /**
+   * @return string
+   */
   public function getAssetCacheDirectory();
 
   /**

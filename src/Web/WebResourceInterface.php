@@ -2,7 +2,7 @@
 
 namespace Outpost\Web;
 
-use Outpost\Resources\ResourceInterface;
+use Outpost\ResourceInterface;
 
 interface WebResourceInterface extends ResourceInterface {
 

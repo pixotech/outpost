@@ -83,9 +83,10 @@ class Command {
     }
   }
 
-  protected function flushCache() {
-    \cli\out("Flushing the primary cache...");
+  protected function clearCache() {
+    \cli\out("Clearing the primary cache...");
     $this->site->getCache()->getCache()->flush();
+    $this->site->getCache()->getCache()->purge();
     \cli\out("done.\n");
   }
 
@@ -111,7 +112,7 @@ class Command {
     switch ($clear) {
       case 'all':
       case 'cache':
-        $this->flushCache();
+        $this->clearCache();
         if ($clear != 'all') break;
       case 'twig':
         $this->clearTwigCache();
@@ -142,7 +143,7 @@ class Command {
       \cli\line("This is not a Pattern Lab site");
       return;
     }
-    $publicRoot = $this->site->getPublicDirectory();
+    $publicRoot = $this->site->getEnvironment()->getPublicDirectory();
     $patternlab = $this->site->get(new PatternLab(__DIR__ . '/../../../../patternlab'));
     foreach ($patternlab->getAssets() as $path => $sourcePath) {
       $destinationPath = $publicRoot . '/' . $path;

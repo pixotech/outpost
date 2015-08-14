@@ -1,8 +1,6 @@
 <?php
 
-namespace Outpost\Resources;
-
-use Outpost\SiteInterface;
+namespace Outpost;
 
 interface ResourceInterface {
   public function __invoke(SiteInterface $site);

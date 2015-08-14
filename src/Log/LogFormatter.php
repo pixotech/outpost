@@ -28,7 +28,7 @@ class LogFormatter implements FormatterInterface {
     }
 
     $time = $record['datetime']->format('H:i:s');
-    $date = $record['datetime']->format('Y-m-d');
+    $date = $record['datetime']->format('ymd');
     $message = $record['message'];
     $request = $this->getRequestLine($record);
     $system = !empty($record['context']['outpost']) ? $record['context']['outpost'] : null;

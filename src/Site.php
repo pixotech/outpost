@@ -11,28 +11,28 @@ namespace Outpost;
 
 use Monolog\Logger;
 use Monolog\Processor\WebProcessor;
-use Outpost\Assets\AssetGeneratedEvent;
-use Outpost\Assets\AssetInterface;
-use Outpost\Assets\MarkerCreatedEvent;
+use Outpost\Assets\AssetManager;
 use Outpost\Cache\Cache;
 use Outpost\Environments\EnvironmentInterface;
 use Outpost\Cache\CacheableInterface;
-use Outpost\Events\ErrorEvent;
 use Outpost\Events\EventInterface;
 use Outpost\Events\ExceptionEvent;
 use Outpost\Events\RequestReceivedEvent;
 use Outpost\Events\ResponseCompleteEvent;
+use Outpost\Exceptions\InvalidResponseException;
 use Outpost\Recovery\HelpResponse;
-use Outpost\Responders\ResponderInterface;
-use Outpost\Responders\Responses\RenderableResponseInterface;
-use Outpost\Responders\Responses\ResponseInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class Site implements SiteInterface {
+abstract class Site implements SiteInterface {
 
   /**
-   * @var \Stash\Pool
+   * @var \Outpost\Assets\AssetManagerInterface
+   */
+  protected $assetManager;
+
+  /**
+   * @var \Outpost\Cache\Cache
    */
   protected $cache;
 
@@ -58,57 +58,18 @@ class Site implements SiteInterface {
 
   /**
    * @param EnvironmentInterface $environment
-   * @param Request $request
-   */
-  public static function respond(EnvironmentInterface $environment, Request $request = null) {
-    if (!isset($request)) $request = Request::createFromGlobals();
-    try {
-      /** @var Site $site */
-      $site = new static($environment);
-      $response = $site->invoke($request);
-    }
-    catch (\Exception $e) {
-      $response = new Response('Internal Server Error', 500);
-    }
-    $response->prepare($request);
-    $response->send();
-  }
-
-  /**
-   * @param EnvironmentInterface $environment
    */
   public function __construct(EnvironmentInterface $environment) {
     $this->environment = $environment;
     $this->log = $this->makeLog();
     $this->cache = $this->makeCache();
     $this->client = $this->makeClient();
+    $this->assetManager = $this->makeAssetManager();
   }
 
   /**
-   * @param null|Request $request
-   * @return Response
-   */
-  public function __invoke(Request $request = null) {
-    return $this->invoke($request);
-  }
-
-  /**
-   * @param string $key
-   */
-  public function clearAssetMarker($key) {
-    unlink($this->getAssetMarkerPath($key));
-  }
-
-  /**
-   * @param AssetInterface $asset
-   */
-  public function createAssetMarker(AssetInterface $asset) {
-    $key = $asset->getKey();
-    file_put_contents($this->getAssetMarkerPath($key), serialize($asset));
-    $this->handleEvent(new MarkerCreatedEvent($asset));
-  }
-
-  /**
+   * Get a site resource
+   *
    * @param callable $resource
    * @return mixed
    */
@@ -126,74 +87,49 @@ class Site implements SiteInterface {
   }
 
   /**
-   * @param AssetInterface $asset
-   * @return \SplFileInfo
+   * @return \Outpost\Assets\AssetManagerInterface
    */
-  public function getAssetFile(AssetInterface $asset) {
-    if (!$this->hasLocalAsset($asset)) $this->generateAsset($asset);
-    return new \SplFileInfo($this->getLocalAssetPath($asset));
+  public function getAssetManager() {
+    return $this->assetManager;
   }
 
   /**
-   * @param string $key
-   * @return AssetInterface
-   * @throws \OutOfBoundsException
-   */
-  public function getAssetMarker($key) {
-    $marker = $this->getAssetMarkerPath($key);
-    if (!file_exists($marker)) throw new \OutOfBoundsException("Unknown asset: $key");
-    return unserialize(file_get_contents($marker));
-  }
-
-  /**
-   * @param string $key
-   * @return string
-   */
-  public function getAssetMarkerPath($key) {
-    return $this->getEnvironment()->getAssetCacheDirectory() . '/' . $key;
-  }
-
-  /**
-   * @param AssetInterface $asset
-   * @return string
-   */
-  public function getAssetUrl(AssetInterface $asset) {
-    return "/_assets/" . $asset->getKey() . '.' . $asset->getExtension();
-  }
-
-  /**
+   * Get the site cache
+   *
    * @return \Outpost\Cache\Cache
+   * @see \Outpost\Cache\Cache Cache
    */
   public function getCache() {
     return $this->cache;
   }
 
   /**
+   * Get the site web client
+   *
    * @return \GuzzleHttp\ClientInterface
+   * @see \Outpost\Web\Client Client
    */
   public function getClient() {
     return $this->client;
   }
 
   /**
+   * Get the local environment
+   *
    * @return EnvironmentInterface
+   * @see \Outpost\Environment\EnvironmentInterface EnvironmentInterface
    */
   public function getEnvironment() {
     return $this->environment;
   }
 
   /**
+   * Get the site log
+   *
    * @return \Psr\Log\LoggerInterface
    */
   public function getLog() {
     return $this->log;
-  }
-
-  /**
-   * @return string
-   */
-  public function getPublicDirectory() {
-    return $this->getEnvironment()->getPublicDirectory();
   }
 
   /**
@@ -205,6 +141,8 @@ class Site implements SiteInterface {
   }
 
   /**
+   * Get the value of a site setting
+   *
    * @param string $key
    * @return mixed
    */
@@ -213,6 +151,8 @@ class Site implements SiteInterface {
   }
 
   /**
+   * Get the site Twig parser
+   *
    * @return \Twig_Environment
    */
   public function getTwig() {
@@ -221,41 +161,10 @@ class Site implements SiteInterface {
   }
 
   /**
-   * @param $level
-   * @param $message
-   * @param $file
-   * @param $line
-   * @throws \ErrorException
+   * @param EventInterface $event
    */
-  public function handleError($level, $message, $file, $line) {
-    if ($level & error_reporting()) {
-      if ($level & (E_ERROR | E_RECOVERABLE_ERROR | E_USER_ERROR)) {
-        throw new \ErrorException($message, 0, $level, $file, $line);
-      }
-      else {
-        $this->handleEvent(new ErrorEvent($level, $message, $file, $line));
-      }
-    }
-  }
-
   public function handleEvent(EventInterface $event) {
     $this->getLog()->log($event->getLogLevel(), $event->getLogMessage(), ['event' => $event]);
-  }
-
-  /**
-   * @param string $key
-   * @return bool
-   */
-  public function hasAssetMarker($key) {
-    return file_exists($this->getAssetMarkerPath($key));
-  }
-
-  /**
-   * @param AssetInterface $asset
-   * @return bool
-   */
-  public function hasLocalAsset(AssetInterface $asset) {
-    return file_exists($this->getLocalAssetPath($asset));
   }
 
   /**
@@ -275,56 +184,40 @@ class Site implements SiteInterface {
   }
 
   /**
-   * @param Request $request
-   * @return Response
-   * @throws \Exception
+   * @param string $template
+   * @param array $variables
+   * @return string
    */
-  public function invoke(Request $request = null) {
+  public function render($template, array $variables = []) {
+    if ($template instanceof RenderableInterface) {
+      $variables += $template->getTemplateVariables();
+      $template = $template->getTemplate();
+    }
+    return $this->getTwig()->render($template, $variables);
+  }
+
+  /**
+   * @param Request $request
+   */
+  public function respond(Request $request) {
     $this->handleEvent(new RequestReceivedEvent($request));
-    if (!isset($request)) $request = $this->getEnvironment()->getRequest();
-    $this->enableErrorHandling();
     try {
-      $response = $this->invokeResponders($request);
-      if (!($response instanceof Response)) throw new Exceptions\InvalidResponseException($this, $request, $response);
+      if ($this->assetManager->isAssetRequest($request)) {
+        $response = $this->assetManager->getResponse($request);
+      }
+      else {
+        $response = $this->getResponse($request);
+      }
+      if (!($response instanceof Response)) {
+        throw new InvalidResponseException($this, $request, $response);
+      }
       $this->handleEvent(new ResponseCompleteEvent($response, $request));
     }
     catch (\Exception $e) {
-      $response = $this->handleRequestException($e, $request);
+      $response = $this->handleResponseException($e, $request);
     }
-    $this->disableErrorHandling();
-    return $response;
-  }
-
-  /**
-   *
-   */
-  protected function disableErrorHandling() {
-    restore_error_handler();
-  }
-
-  /**
-   *
-   */
-  protected function enableErrorHandling() {
-    set_error_handler([$this, 'handleError']);
-  }
-
-  /**
-   * @param AssetInterface $asset
-   * @throws \Exception
-   */
-  protected function generateAsset(AssetInterface $asset) {
-    $file = new \SplFileInfo($this->getLocalAssetPath($asset));
-    $asset->generate($this, $file);
-    $this->handleEvent(new AssetGeneratedEvent($asset));
-  }
-
-  /**
-   * @param AssetInterface $asset
-   * @return string
-   */
-  protected function getLocalAssetPath(AssetInterface $asset) {
-    return $this->getEnvironment()->getGeneratedAssetsDirectory() . '/' . $asset->getKey() . '.' . $asset->getExtension();
+    $response->prepare($request);
+    $response->send();
   }
 
   /**
@@ -341,14 +234,6 @@ class Site implements SiteInterface {
     return [new WebProcessor()];
   }
 
-  /**
-   * @var mixed $request
-   * @return ResponderInterface[]
-   */
-  protected function getResponders($request) {
-    return [];
-  }
-
   protected function getTwigLoader() {
     return $this->getEnvironment()->getTwigLoader();
   }
@@ -362,30 +247,16 @@ class Site implements SiteInterface {
    * @param Request $request
    * @return Recovery\HelpResponse
    */
-  protected function handleRequestException(\Exception $exception, Request $request) {
+  protected function handleResponseException(\Exception $exception, Request $request) {
     $this->handleEvent(new ExceptionEvent($exception));
     return $this->makeErrorResponse($exception, $request);
   }
 
   /**
-   * @param Request $request
-   * @return Response
-   * @throws \Exception
+   * @return AssetManager
    */
-  protected function invokeResponders(Request $request) {
-    /** @var Responders\ResponderInterface[] $responders */
-    $responders = $this->getResponders($request);
-    if (!is_array($responders)) $responders = [$responders];
-    foreach ($responders as $responder) {
-      try {
-        $response = $this->processResponse($responder->invoke());
-        return $response;
-      }
-      catch (Responders\Exceptions\UnrecognizedRequestException $e) {
-        continue;
-      }
-    }
-    throw new Exceptions\UnrecognizedRequestException($this, $request);
+  protected function makeAssetManager() {
+    return new AssetManager($this);
   }
 
   /**
@@ -422,24 +293,9 @@ class Site implements SiteInterface {
   }
 
   /**
-   * @param ResponseInterface $response
-   * @return Response
-   */
-  protected function makeResponse(ResponseInterface $response) {
-    return new Response($response->getContent(), $response->getStatusCode(), $response->getHeaders());
-  }
-
-  /**
    * @return \Twig_Environment
    */
   protected function makeTwig() {
     return new \Twig_Environment($this->getTwigLoader(), $this->getTwigOptions());
-  }
-
-  protected function processResponse($response) {
-    if ($response instanceof RenderableResponseInterface) $response = $response->render($this->getTwig());
-    if ($response instanceof ResponseInterface) $response = $this->makeResponse($response);
-    if (is_string($response)) $response = new Response($response);
-    return $response;
   }
 }

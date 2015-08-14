@@ -19,6 +19,11 @@ class Cache implements CacheInterface {
     if (isset($ns)) $this->cache->setNamespace($ns);
   }
 
+  public function clear($key) {
+    $item = $this->getCache()->getItem($key);
+    $item->clear();
+  }
+
   public function get($key, callable $callback, $lifetime = null) {
     $cached = $this->cache->getItem($key);
     $content = $cached->get();

@@ -9,6 +9,8 @@
 
 namespace Outpost\Images;
 
+use GuzzleHttp\Message\ResponseInterface;
+use GuzzleHttp\Stream\StreamInterface;
 use Outpost\SiteInterface;
 use Outpost\Web\Requests\FileRequest;
 
@@ -31,12 +33,16 @@ class RemoteImage extends Image {
 
   public function generate(SiteInterface $site, \SplFileInfo $file) {
     $body = $site->getClient()->send($this->makeRequest());
-    $fp = fopen($file->getPathname(), 'wb');
-    while (!$body->eof()) fwrite($fp, $body->read(1024));
-    fclose($fp);
+    $this->writeResponseBody($body, $file);
   }
 
   public function makeRequest() {
     return new FileRequest($this->url);
+  }
+
+  protected function writeResponseBody(StreamInterface $body, \SplFileInfo $file) {
+    $fp = fopen($file->getPathname(), 'wb');
+    while (!$body->eof()) fwrite($fp, $body->read(1024));
+    fclose($fp);
   }
 }

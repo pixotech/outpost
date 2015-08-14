@@ -48,10 +48,22 @@ class Environment implements EnvironmentInterface {
     $this->adjust();
   }
 
+  public function __destruct() {
+    $this->restore();
+  }
+
+  public function getAssetBaseUrl() {
+    return '/' . $this->getAssetsDirectoryName() . '/';
+  }
+
   public function getAssetCacheDirectory($ensure = true) {
     $dir = $this->getRootDirectory() . '/cache/assets';
     if ($ensure) $this->ensureDirectory($dir);
     return $dir;
+  }
+
+  public function getAssetsDirectoryName() {
+    return '_assets';
   }
 
   public function getCacheDriver() {
@@ -59,7 +71,7 @@ class Environment implements EnvironmentInterface {
   }
 
   public function getGeneratedAssetsDirectory($ensure = true) {
-    $dir = $this->getPublicDirectory() . '/_assets';
+    $dir = $this->getPublicDirectory() . '/' . $this->getAssetsDirectoryName();
     if ($ensure) $this->ensureDirectory($dir);
     return $dir;
   }
@@ -121,6 +133,17 @@ class Environment implements EnvironmentInterface {
   }
 
   /**
+   * @param $level
+   * @param $message
+   * @param $file
+   * @param $line
+   * @throws \ErrorException
+   */
+  public function handleError($level, $message, $file, $line) {
+    if ($level & error_reporting()) throw new \ErrorException($message, 0, $level, $file, $line);
+  }
+
+  /**
    * @param string $name
    * @return bool
    */
@@ -139,6 +162,7 @@ class Environment implements EnvironmentInterface {
   protected function adjust() {
     $this->configureErrorReporting();
     $this->configureTimezone();
+    $this->enableErrorHandling();
   }
 
   protected function configureErrorReporting() {
@@ -147,6 +171,20 @@ class Environment implements EnvironmentInterface {
 
   protected function configureTimezone() {
     date_default_timezone_set($this->timezone);
+  }
+
+  /**
+   *
+   */
+  protected function disableErrorHandling() {
+    restore_error_handler();
+  }
+
+  /**
+   *
+   */
+  protected function enableErrorHandling() {
+    set_error_handler([$this, 'handleError']);
   }
 
   protected function ensureDirectory($dir) {
@@ -215,6 +253,10 @@ class Environment implements EnvironmentInterface {
    */
   protected function parseConfiguration($config) {
     return json_decode($config, true) ?: [];
+  }
+
+  protected function restore() {
+    $this->disableErrorHandling();
   }
 
   protected function showErrors($level = E_ALL) {

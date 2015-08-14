@@ -21,6 +21,7 @@ class OverlayImage extends Image {
   protected $width;
 
   public function __construct(OverlayInterface $overlay, $width, $height) {
+    parent::__construct();
     $this->overlay = $overlay;
     $this->width = $width;
     $this->height = $height;

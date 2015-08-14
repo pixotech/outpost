@@ -3,10 +3,12 @@
 namespace Outpost;
 
 use Outpost\Assets\AssetInterface;
+use Outpost\Assets\AssetManagerInterface;
 use Outpost\Environments\EnvironmentInterface;
 use Outpost\Events\EventInterface;
 use Outpost\Web\MockClient;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class MockSite implements SiteInterface {
 
@@ -174,5 +176,36 @@ class MockSite implements SiteInterface {
    */
   public function invoke(Request $request = NULL) {
     // TODO: Implement invoke() method.
+  }
+
+  /**
+   * @return AssetManagerInterface
+   */
+  public function getAssetManager() {
+    // TODO: Implement getAssetManager() method.
+  }
+
+  /**
+   * @param Request $request
+   * @return Response
+   */
+  public function getResponse(Request $request) {
+    // TODO: Implement getResponse() method.
+  }
+
+  /**
+   * @param $template
+   * @param array $variables
+   * @return string
+   */
+  public function render($template, array $variables = []) {
+    // TODO: Implement render() method.
+  }
+
+  /**
+   * @param null|Request $request
+   */
+  public function respond(Request $request) {
+    // TODO: Implement respond() method.
   }
 }

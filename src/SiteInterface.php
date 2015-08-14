@@ -9,24 +9,13 @@
 
 namespace Outpost;
 
-use Outpost\Assets\AssetInterface;
+use Outpost\Assets\AssetManagerInterface;
 use Outpost\Environments\EnvironmentInterface;
-use Outpost\Cache\CacheableInterface;
 use Outpost\Events\EventInterface;
-use Outpost\Resources\ResourceInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 interface SiteInterface {
-
-  /**
-   * @param string $key
-   */
-  public function clearAssetMarker($key);
-
-  /**
-   * @param AssetInterface $asset
-   */
-  public function createAssetMarker(AssetInterface $asset);
 
   /**
    * @param callable $resource
@@ -35,28 +24,9 @@ interface SiteInterface {
   public function get(callable $resource);
 
   /**
-   * @param AssetInterface $asset
-   * @return \SplFileInfo
+   * @return AssetManagerInterface
    */
-  public function getAssetFile(AssetInterface $asset);
-
-  /**
-   * @param string $key
-   * @return AssetInterface
-   */
-  public function getAssetMarker($key);
-
-  /**
-   * @param string $key
-   * @return string
-   */
-  public function getAssetMarkerPath($key);
-
-  /**
-   * @param AssetInterface $asset
-   * @return string
-   */
-  public function getAssetUrl(AssetInterface $asset);
+  public function getAssetManager();
 
   /**
    * @return \Outpost\Cache\CacheInterface
@@ -79,9 +49,10 @@ interface SiteInterface {
   public function getLog();
 
   /**
-   * @return string
+   * @param Request $request
+   * @return Response
    */
-  public function getPublicDirectory();
+  public function getResponse(Request $request);
 
     /**
    * @param string $name
@@ -106,18 +77,6 @@ interface SiteInterface {
   public function handleEvent(EventInterface $event);
 
   /**
-   * @param string $key
-   * @return bool
-   */
-  public function hasAssetMarker($key);
-
-  /**
-   * @param AssetInterface $asset
-   * @return bool
-   */
-  public function hasLocalAsset(AssetInterface $asset);
-
-  /**
    * @param string $name
    * @return bool
    */
@@ -130,8 +89,14 @@ interface SiteInterface {
   public function hasSecret($name);
 
   /**
-   * @param null|Request $request
-   * @return \Symfony\Component\HttpFoundation\Response
+   * @param $template
+   * @param array $variables
+   * @return string
    */
-  public function invoke(Request $request = null);
+  public function render($template, array $variables = []);
+
+  /**
+   * @param null|Request $request
+   */
+  public function respond(Request $request);
 }

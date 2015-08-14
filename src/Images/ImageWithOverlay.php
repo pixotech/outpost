@@ -9,8 +9,6 @@
 
 namespace Outpost\Images;
 
-use Outpost\Assets\StorageInterface;
-use Outpost\Assets\FileInterface;
 use Outpost\Images\Overlays\Overlay;
 use Outpost\Images\Overlays\OverlayImage;
 use Outpost\SiteInterface;
@@ -21,13 +19,14 @@ class ImageWithOverlay extends Image {
   protected $overlay;
 
   public function __construct(Image $image, Overlay $overlay) {
+    parent::__construct();
     $this->image = $image;
     $this->overlay = $overlay;
   }
 
   public function generate(SiteInterface $site, \SplFileInfo $file) {
-    $image = $site->getAssetFile($this->image);
-    $overlay = $site->getAssetFile($this->getOverlayImage($image));
+    $image = $site->getAssetManager()->getAssetFile($this->image);
+    $overlay = $site->getAssetManager()->getAssetFile($this->getOverlayImage($image));
     $command = sprintf("composite -compose %s %s %s %s", $this->getMode(), $image->getPathname(), $overlay->getPathname(), $file->getPathname());
     exec($command);
   }

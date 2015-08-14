@@ -141,4 +141,11 @@ class MockEnvironment implements EnvironmentInterface {
   public function hasSecret($name) {
     return isset($this->secrets[$name]);
   }
+
+  /**
+   * @return string
+   */
+  public function getAssetBaseUrl() {
+    // TODO: Implement getAssetBaseUrl() method.
+  }
 }

@@ -14,9 +14,12 @@ class Document implements DocumentInterface {
   protected $baseHref;
   protected $body;
   protected $charset = 'UTF-8';
+  protected $meta = [];
   protected $scripts = [];
+  protected $scriptBlocks = [];
   protected $styles = [];
   protected $stylesheets = [];
+  protected $themeColor;
   protected $title;
 
   public function __construct($body = null, $title = null) {
@@ -25,7 +28,7 @@ class Document implements DocumentInterface {
   }
 
   public function __toString() {
-    return $this->toString();
+    return (string)$this->toString();
   }
 
   public function toString() {
@@ -36,8 +39,16 @@ class Document implements DocumentInterface {
     $this->addStyles($styles);
   }
 
+  public function addMeta($name, $content) {
+    $this->meta[] = [$name, $content];
+  }
+
   public function addScript($url) {
     $this->scripts[] = $url;
+  }
+
+  public function addScriptBlock($script) {
+    $this->scriptBlocks[] = $script;
   }
 
   public function addStyles($styles) {
@@ -52,12 +63,24 @@ class Document implements DocumentInterface {
     return $this->body;
   }
 
+  public function getThemeColor() {
+    return $this->themeColor;
+  }
+
   public function getTitle() {
     return $this->title;
   }
 
   public function setBaseHref($href) {
     $this->baseHref = $href;
+  }
+
+  public function setBody($body) {
+    $this->body = $body;
+  }
+
+  public function setThemeColor($themeColor) {
+    $this->themeColor = $themeColor;
   }
 
   protected function hasScripts() {
@@ -87,9 +110,12 @@ class Document implements DocumentInterface {
   }
 
   protected function makeBody() {
-    $body  = $this->body;
+    $body  = $this->getBody();
     if ($this->hasStyles() && $this->hasStylesheets()) $body .= $this->makeStylesheetLinks();
     if ($this->hasScripts()) $body .= $this->makeScriptIncludes();
+    foreach ($this->scriptBlocks as $script) {
+      $body .= $this->makeMeta('script', $script);
+    }
     return $this->makeElement('body', $body);
   }
 
@@ -115,6 +141,13 @@ class Document implements DocumentInterface {
     $head .= $this->makeMeta('viewport', 'width=device-width');
     if (!empty($this->baseHref)) {
       $head .= $this->makeOpeningTag('base', ['href' => $this->baseHref]);
+    }
+    if (!empty($this->themeColor)) {
+      $head .= $this->makeMeta('theme-color', $this->themeColor);
+    }
+    foreach ($this->meta as $meta) {
+      list($name, $content) = $meta;
+      $head .= $this->makeMeta($name, $content);
     }
     if ($this->hasStyles()) $head .= $this->makeStyleBlocks();
     if (!$this->hasStyles() && $this->hasStylesheets()) $head .= $this->makeStylesheetLinks();

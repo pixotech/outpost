@@ -9,23 +9,27 @@
 
 namespace Outpost\Web;
 
-use GuzzleHttp\Stream\NullStream;
-use Outpost\Web\Requests\MockRequest;
+use Outpost\MockSite;
 
 class ClientTest extends \PHPUnit_Framework_TestCase {
 
   public function testCreateClient() {
-    new Client($this->makeClient());
+    new Client($this->makeSite(), $this->makeClient());
   }
 
   public function testGetClient() {
     $client = $this->makeClient();
-    $web = new Client($client);
+    $web = new Client($this->makeSite(), $client);
     $this->assertSame($client, $web->getClient());
   }
 
   protected function makeClient() {
     $client = new \GuzzleHttp\Client();
     return $client;
+  }
+
+  protected function makeSite() {
+    $site = new MockSite();
+    return $site;
   }
 }

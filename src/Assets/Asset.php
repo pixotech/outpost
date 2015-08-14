@@ -2,13 +2,14 @@
 
 namespace Outpost\Assets;
 
-use Outpost\Resources\ResourceInterface;
+use Outpost\ResourceInterface;
 use Outpost\SiteInterface;
 
 abstract class Asset implements AssetInterface, ResourceInterface {
 
   public function __invoke(SiteInterface $site) {
-    if (!$site->hasLocalAsset($this)) $site->createAssetMarker($this);
-    return new LocalAsset($this, $site->getAssetUrl($this));
+    $assets = $site->getAssetManager();
+    if (!$assets->hasLocalAsset($this)) $assets->createAssetMarker($this);
+    return new LocalAsset($this, $assets->getAssetUrl($this));
   }
 }
