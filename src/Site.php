@@ -9,14 +9,13 @@
 
 namespace Outpost;
 
-use Monolog\Logger;
-use Monolog\Processor\WebProcessor;
 use Outpost\Assets\AssetManager;
 use Outpost\Cache\Cache;
 use Outpost\Environments\EnvironmentInterface;
 use Outpost\Cache\CacheableInterface;
 use Outpost\Events\EventInterface;
 use Outpost\Events\ExceptionEvent;
+use Outpost\Events\ListenerInterface;
 use Outpost\Events\RequestReceivedEvent;
 use Outpost\Events\ResponseCompleteEvent;
 use Outpost\Exceptions\InvalidResponseException;
@@ -37,34 +36,26 @@ abstract class Site implements SiteInterface {
   protected $cache;
 
   /**
-   * @var \Outpost\Web\Client
-   */
-  protected $client;
-
-  /**
    * @var Environments\EnvironmentInterface
    */
   protected $environment;
 
   /**
-   * @var \Monolog\Logger
+   * @var Events\ListenerInterface[]
    */
-  protected $log;
-
-  /**
-   * @var \Twig_Environment
-   */
-  protected $twig;
+  protected $listeners = [];
 
   /**
    * @param EnvironmentInterface $environment
    */
   public function __construct(EnvironmentInterface $environment) {
     $this->environment = $environment;
-    $this->log = $this->makeLog();
     $this->cache = $this->makeCache();
-    $this->client = $this->makeClient();
     $this->assetManager = $this->makeAssetManager();
+  }
+
+  public function addListener(ListenerInterface $listener) {
+    $this->listeners[] = $listener;
   }
 
   /**
@@ -104,16 +95,6 @@ abstract class Site implements SiteInterface {
   }
 
   /**
-   * Get the site web client
-   *
-   * @return \GuzzleHttp\ClientInterface
-   * @see \Outpost\Web\Client Client
-   */
-  public function getClient() {
-    return $this->client;
-  }
-
-  /**
    * Get the local environment
    *
    * @return EnvironmentInterface
@@ -121,15 +102,6 @@ abstract class Site implements SiteInterface {
    */
   public function getEnvironment() {
     return $this->environment;
-  }
-
-  /**
-   * Get the site log
-   *
-   * @return \Psr\Log\LoggerInterface
-   */
-  public function getLog() {
-    return $this->log;
   }
 
   /**
@@ -151,23 +123,6 @@ abstract class Site implements SiteInterface {
   }
 
   /**
-   * Get the site Twig parser
-   *
-   * @return \Twig_Environment
-   */
-  public function getTwig() {
-    if (!isset($this->twig)) $this->twig = $this->makeTwig();
-    return $this->twig;
-  }
-
-  /**
-   * @param EventInterface $event
-   */
-  public function handleEvent(EventInterface $event) {
-    $this->getLog()->log($event->getLogLevel(), $event->getLogMessage(), ['event' => $event]);
-  }
-
-  /**
    * @param string $key
    * @return bool
    */
@@ -184,63 +139,41 @@ abstract class Site implements SiteInterface {
   }
 
   /**
-   * @param string $template
-   * @param array $variables
-   * @return string
-   */
-  public function render($template, array $variables = []) {
-    if ($template instanceof RenderableInterface) {
-      $variables += $template->getTemplateVariables();
-      $template = $template->getTemplate();
-    }
-    return $this->getTwig()->render($template, $variables);
-  }
-
-  /**
    * @param Request $request
+   * @return Response
    */
-  public function respond(Request $request) {
-    $this->handleEvent(new RequestReceivedEvent($request));
+  public function makeResponse(Request $request) {
+    $this->report(new RequestReceivedEvent($request));
     try {
       if ($this->assetManager->isAssetRequest($request)) {
         $response = $this->assetManager->getResponse($request);
       }
       else {
-        $response = $this->getResponse($request);
+        $response = $this->respond($request);
       }
       if (!($response instanceof Response)) {
         throw new InvalidResponseException($this, $request, $response);
       }
-      $this->handleEvent(new ResponseCompleteEvent($response, $request));
+      $this->report(new ResponseCompleteEvent($response, $request));
     }
     catch (\Exception $e) {
       $response = $this->handleResponseException($e, $request);
     }
-    $response->prepare($request);
-    $response->send();
+    return $response;
   }
 
   /**
-   * @return \Monolog\Handler\HandlerInterface[]
+   * @param EventInterface $event
    */
-  protected function getLogHandlers() {
-    return $this->getEnvironment()->getLogHandlers();
+  public function report(EventInterface $event) {
+    foreach ($this->listeners as $listener) $listener->handleEvent($event, $this);
   }
 
   /**
-   * @return \Monolog\Handler\HandlerInterface[]
+   * @param Request $request
+   * @return Response
    */
-  protected function getLogProcessors() {
-    return [new WebProcessor()];
-  }
-
-  protected function getTwigLoader() {
-    return $this->getEnvironment()->getTwigLoader();
-  }
-
-  protected function getTwigOptions() {
-    return $this->getEnvironment()->getTwigOptions();
-  }
+  abstract public function respond(Request $request);
 
   /**
    * @param \Exception $exception
@@ -248,7 +181,7 @@ abstract class Site implements SiteInterface {
    * @return Recovery\HelpResponse
    */
   protected function handleResponseException(\Exception $exception, Request $request) {
-    $this->handleEvent(new ExceptionEvent($exception));
+    $this->report(new ExceptionEvent($exception));
     return $this->makeErrorResponse($exception, $request);
   }
 
@@ -269,33 +202,11 @@ abstract class Site implements SiteInterface {
   }
 
   /**
-   * @return \Outpost\Web\Client
-   */
-  protected function makeClient() {
-    $client = new \GuzzleHttp\Client();
-    return new Web\Client($this, $client);
-  }
-
-  /**
    * @param \Exception $error
    * @param Request $request
    * @return Recovery\HelpResponse
    */
   protected function makeErrorResponse(\Exception $error, Request $request) {
     return new HelpResponse($error);
-  }
-
-  /**
-   * @return \Monolog\Logger
-   */
-  protected function makeLog() {
-    return new Logger('outpost', $this->getLogHandlers(), $this->getLogProcessors());
-  }
-
-  /**
-   * @return \Twig_Environment
-   */
-  protected function makeTwig() {
-    return new \Twig_Environment($this->getTwigLoader(), $this->getTwigOptions());
   }
 }

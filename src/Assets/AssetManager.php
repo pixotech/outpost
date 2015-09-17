@@ -39,7 +39,7 @@ class AssetManager implements AssetManagerInterface {
   public function createAssetMarker(AssetInterface $asset) {
     $key = $asset->getKey();
     file_put_contents($this->getAssetMarkerPath($key), serialize($asset));
-    $this->site->handleEvent(new MarkerCreatedEvent($asset));
+    $this->site->report(new MarkerCreatedEvent($asset));
   }
 
   /**
@@ -49,7 +49,7 @@ class AssetManager implements AssetManagerInterface {
   public function generateAsset(AssetInterface $asset) {
     $file = new \SplFileInfo($this->getLocalAssetPath($asset));
     $asset->generate($this->site, $file);
-    if ($file->isFile()) $this->site->handleEvent(new AssetGeneratedEvent($asset));
+    if ($file->isFile()) $this->site->report(new AssetGeneratedEvent($asset));
     else throw new \Exception("Could not create asset: " . $asset->getKey());
   }
 
@@ -164,11 +164,11 @@ class AssetManager implements AssetManagerInterface {
       return new BinaryFileResponse($this->getRequestedAssetFile($request), 200);
     }
     catch (\OutOfBoundsException $e) {
-      $this->site->handleEvent(new ExceptionEvent($e));
+      $this->site->report(new ExceptionEvent($e));
       return new Response(null, 404);
     }
     catch (\Exception $e) {
-      $this->site->handleEvent(new ExceptionEvent($e));
+      $this->site->report(new ExceptionEvent($e));
       return new Response(null, 500);
     }
   }
@@ -195,9 +195,5 @@ class AssetManager implements AssetManagerInterface {
    */
   public function isAssetRequest(Request $request) {
     return preg_match($this->getAssetPathRegex(), $request->getPathInfo());
-  }
-
-  protected function getLog() {
-    return $this->site->getLog();
   }
 }

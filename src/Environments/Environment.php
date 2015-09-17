@@ -9,11 +9,7 @@
 
 namespace Outpost\Environments;
 
-use Monolog\Handler\StreamHandler;
-use Monolog\Logger;
-use Outpost\Log\LogFormatter;
 use Stash\Driver\FileSystem;
-use Symfony\Component\HttpFoundation\Request;
 
 class Environment implements EnvironmentInterface {
 
@@ -37,12 +33,11 @@ class Environment implements EnvironmentInterface {
    */
   protected $timezone = 'America/Chicago';
 
-  public function __construct($root, Request $request = null) {
+  public function __construct($root) {
     if (!is_dir($root)) {
       throw new Exceptions\InvalidPathException($root);
     }
     $this->rootDirectory = realpath($root);
-    $this->request = $request ?: Request::createFromGlobals();
     $this->loadSettings();
     $this->loadSecrets();
     $this->adjust();
@@ -76,18 +71,10 @@ class Environment implements EnvironmentInterface {
     return $dir;
   }
 
-  public function getLogHandlers() {
-    return [];
-  }
-
   public function getPublicDirectory($ensure = true) {
     $dir = $this->getRootDirectory() . '/public';
     if ($ensure) $this->ensureDirectory($dir);
     return $dir;
-  }
-
-  public function getRequest() {
-    return $this->request;
   }
 
   public function getRootDirectory() {
@@ -122,14 +109,6 @@ class Environment implements EnvironmentInterface {
    */
   public function getSettings() {
     return $this->settings;
-  }
-
-  public function getTwigLoader() {
-    return null;
-  }
-
-  public function getTwigOptions() {
-    return [];
   }
 
   /**
@@ -237,14 +216,6 @@ class Environment implements EnvironmentInterface {
     $driver = new FileSystem();
     $driver->setOptions(['dirSplit' => 2, 'path' => $cachePath]);
     return $driver;
-  }
-
-  protected function makeLocalLogHandler($localPath, $level = Logger::DEBUG) {
-    $logPath = $this->rootDirectory . '/' . $localPath;
-    $this->ensureDirectory(dirname($logPath));
-    $handler = new StreamHandler($logPath, $level);
-    $handler->setFormatter(new LogFormatter());
-    return $handler;
   }
 
   /**

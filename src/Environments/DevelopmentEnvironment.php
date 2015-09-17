@@ -18,8 +18,4 @@ class DevelopmentEnvironment extends Environment {
   public function getCacheDriver() {
     return $this->makeLocalCacheDriver("cache/outpost");
   }
-
-  public function getLogHandlers() {
-    return [$this->makeLocalLogHandler("log/outpost.log")];
-  }
 }

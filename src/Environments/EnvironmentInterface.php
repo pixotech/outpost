@@ -9,8 +9,6 @@
 
 namespace Outpost\Environments;
 
-use Symfony\Component\HttpFoundation\Request;
-
 interface EnvironmentInterface {
 
   /**
@@ -34,19 +32,9 @@ interface EnvironmentInterface {
   public function getGeneratedAssetsDirectory();
 
   /**
-   * @return \Monolog\Handler\HandlerInterface[]
-   */
-  public function getLogHandlers();
-
-  /**
    * @return string
    */
   public function getPublicDirectory();
-
-  /**
-   * @return Request
-   */
-  public function getRequest();
 
   /**
    * @return string
@@ -74,16 +62,6 @@ interface EnvironmentInterface {
    * @return array
    */
   public function getSecrets();
-
-  /**
-   * @return \Twig_LoaderInterface
-   */
-  public function getTwigLoader();
-
-  /**
-   * @return array
-   */
-  public function getTwigOptions();
 
   /**
    * @param string $name

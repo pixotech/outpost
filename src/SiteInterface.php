@@ -12,10 +12,13 @@ namespace Outpost;
 use Outpost\Assets\AssetManagerInterface;
 use Outpost\Environments\EnvironmentInterface;
 use Outpost\Events\EventInterface;
+use Outpost\Events\ListenerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 interface SiteInterface {
+
+  public function addListener(ListenerInterface $listener);
 
   /**
    * @param callable $resource
@@ -34,25 +37,9 @@ interface SiteInterface {
   public function getCache();
 
   /**
-   * @return \Outpost\Web\ClientInterface
-   */
-  public function getClient();
-
-  /**
    * @return EnvironmentInterface
    */
   public function getEnvironment();
-
-  /**
-   * @return \Psr\Log\LoggerInterface
-   */
-  public function getLog();
-
-  /**
-   * @param Request $request
-   * @return Response
-   */
-  public function getResponse(Request $request);
 
     /**
    * @param string $name
@@ -67,16 +54,6 @@ interface SiteInterface {
   public function getSecret($name);
 
   /**
-   * @return \Twig_Environment
-   */
-  public function getTwig();
-
-  /**
-   * @param EventInterface $event
-   */
-  public function handleEvent(EventInterface $event);
-
-  /**
    * @param string $name
    * @return bool
    */
@@ -89,14 +66,19 @@ interface SiteInterface {
   public function hasSecret($name);
 
   /**
-   * @param $template
-   * @param array $variables
-   * @return string
+   * @param Request $request
+   * @return Response
    */
-  public function render($template, array $variables = []);
+  public function makeResponse(Request $request);
 
   /**
-   * @param null|Request $request
+   * @param EventInterface $event
+   */
+  public function report(EventInterface $event);
+
+  /**
+   * @param Request $request
+   * @return Response
    */
   public function respond(Request $request);
 }
