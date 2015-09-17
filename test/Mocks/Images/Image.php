@@ -7,11 +7,12 @@
  * @license http://opensource.org/licenses/NCSA NCSA
  */
 
-namespace Outpost\Images;
+namespace Outpost\Mocks\Images;
 
+use Outpost\Images\ImageInterface;
 use Outpost\SiteInterface;
 
-class MockImage implements ImageInterface {
+class Image implements ImageInterface {
 
   public $alt = '';
   public $key;

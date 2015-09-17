@@ -4,13 +4,6 @@ namespace Outpost\Events;
 
 interface EventInterface {
 
-  public function getColor();
-
-  /**
-   * @return string
-   */
-  public function getLocation();
-
   /**
    * @return string
    */

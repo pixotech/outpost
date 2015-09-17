@@ -1,10 +1,11 @@
 <?php
 
-namespace Outpost\Assets;
+namespace Outpost\Mocks\Assets;
 
+use Outpost\Assets\AssetInterface;
 use Outpost\SiteInterface;
 
-class MockAsset extends Asset implements AssetInterface {
+class Asset extends \Outpost\Assets\Asset implements AssetInterface {
 
   public $extension;
   public $key;

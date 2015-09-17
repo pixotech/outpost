@@ -14,7 +14,7 @@ use Outpost\Recovery\HasRepairInterface;
 use Outpost\SiteInterface;
 use Symfony\Component\HttpFoundation\Request;
 
-class InvalidResponseException extends \UnexpectedValueException implements HasDescriptionInterface, HasRepairInterface {
+class InvalidResponseException extends \UnexpectedValueException implements HasDescriptionInterface {
 
   public function __construct(SiteInterface $site, Request $request, $response) {
     $this->site = $site;
@@ -24,24 +24,16 @@ class InvalidResponseException extends \UnexpectedValueException implements HasD
   }
 
   public function getDescription() {
-    return <<<DIAGNOSIS
+    return <<<ERROR
 
-  <p>A responder returned an invalid response</p>
+  <h1>Invalid response</h1>
 
-DIAGNOSIS;
-  }
+  <p>Outpost expects the <code>respond</code> method to return a <a href="http://symfony.com/doc/current/components/http_foundation/introduction.html#response">Response</a> object.</p>
 
-  public function getRepair() {
-    $specifics = '';
-    if (is_string($this->response)) {
-      $specifics = "<p>Use the <code>makeResponse()</code> method to create a Response from a string.</p>";
-    }
-    return <<<INSTRUCTIONS
+  <pre>
+  return new \Symfony\Component\HttpFoundation\Response(\$responseBody);
+  </pre>
 
-  <p>Return a Response object</p>
-
-  $specifics
-
-INSTRUCTIONS;
+ERROR;
   }
 }

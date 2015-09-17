@@ -1,23 +1,16 @@
 <?php
 
-namespace Outpost;
+namespace Outpost\Mocks;
 
 use Outpost\Assets\AssetInterface;
 use Outpost\Assets\AssetManagerInterface;
 use Outpost\Environments\EnvironmentInterface;
 use Outpost\Events\EventInterface;
-use Outpost\Web\MockClient;
+use Outpost\SiteInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class MockSite implements SiteInterface {
-
-  public $client;
-  public $twig;
-
-  public function __construct() {
-    $this->client = new MockClient();
-  }
+class Site implements SiteInterface {
 
   /**
    * @param string $key

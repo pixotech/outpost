@@ -2,7 +2,7 @@
 
 namespace Outpost\Events;
 
-use Monolog\Logger;
+use Psr\Log\LogLevel;
 
 abstract class Event implements EventInterface {
 
@@ -10,19 +10,11 @@ abstract class Event implements EventInterface {
     $this->time = $this->makeTime();
   }
 
-  public function getColor() {
-    return null;
-  }
-
-  public function getLocation() {
-    return "Site";
-  }
-
   /**
    * @return string
    */
   public function getLogLevel() {
-    return Logger::INFO;
+    return LogLevel::INFO;
   }
 
   public function getTime() {

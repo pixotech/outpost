@@ -9,15 +9,20 @@
     </section>
   <?php endif ?>
 
-  <?php if (!empty($repairInstructions)): ?>
-  <section class="repairInstructions">
-    <h2>How To Fix It</h2>
-    <?= $repairInstructions ?>
-  </section>
-  <?php endif ?>
-
   <?php if (!empty($excerpt)): ?>
     <?= $excerpt ?>
+  <?php endif ?>
+
+  <?php if (!empty($exception)): ?>
+    <h2>Exception details</h2>
+    <dl>
+      <dt>Message</dt>
+        <dd><?php print $exception->getMessage() ?></dd>
+      <dt>File</dt>
+        <dd><?php print $exception->getFile() ?></dd>
+      <dt>Line</dt>
+        <dd><?php print $exception->getLine() ?></dd>
+    </dl>
   <?php endif ?>
 
   <?php if (!empty($trace)): ?>

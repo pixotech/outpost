@@ -7,13 +7,14 @@
  * @license http://opensource.org/licenses/NCSA NCSA
  */
 
-namespace Outpost\Environments;
+namespace Outpost\Mocks\Environments;
 
 use Monolog\Handler\TestHandler;
+use Outpost\Environments\EnvironmentInterface;
 use Stash\Driver\Ephemeral;
 use Symfony\Component\HttpFoundation\Request;
 
-class MockEnvironment implements EnvironmentInterface {
+class Environment implements EnvironmentInterface {
 
   public $assetCacheDirectory;
   public $cacheDriver;
@@ -26,7 +27,7 @@ class MockEnvironment implements EnvironmentInterface {
   public $twigOptions = [];
 
   public static function makeTestEnvironment(Request $request = null) {
-    $environment = new MockEnvironment();
+    $environment = new Environment();
     $environment->cacheDriver = new Ephemeral();
     $environment->logHandlers = [new TestHandler()];
     $environment->request = $request;

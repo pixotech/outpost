@@ -9,5 +9,5 @@ body {
 pre {
   background-color: #e6e6e6;
   max-width: 100%;
-  overflow-x: scroll;
+  overflow-x: auto;
 }

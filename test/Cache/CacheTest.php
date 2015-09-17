@@ -2,7 +2,7 @@
 
 namespace Outpost\Cache;
 
-use Outpost\MockSite;
+use Outpost\Mocks\Site;
 use Stash\Driver\Ephemeral;
 
 class CacheTest extends \PHPUnit_Framework_TestCase {
@@ -39,6 +39,6 @@ class CacheTest extends \PHPUnit_Framework_TestCase {
   }
 
   protected function makeSite() {
-    return new MockSite();
+    return new Site();
   }
 }

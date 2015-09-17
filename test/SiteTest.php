@@ -10,7 +10,7 @@
 namespace Outpost;
 
 use Monolog\Handler\TestHandler;
-use Outpost\Environments\MockEnvironment;
+use Outpost\Mocks\Environments\Environment;
 use Stash\Driver\Ephemeral;
 
 class SiteTest extends \PHPUnit_Framework_TestCase {
@@ -59,10 +59,10 @@ class SiteTest extends \PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @return MockEnvironment
+   * @return Environment
    */
   protected function makeEnvironment() {
-    $environment = new MockEnvironment();
+    $environment = new Environment();
     $environment->cacheDriver = new Ephemeral();
     $environment->logHandlers = [new TestHandler()];
     return $environment;

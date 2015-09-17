@@ -53,9 +53,11 @@ class HelpPage {
     $vars = [
       'title'=> $this->makeTitle(),
       # 'excerpt' => $this->makeCodeExcerpt(),
+      'exception' => $this->exception,
       'trace' => @\Kint::trace($this->exception->getTrace()),
     ];
     if ($this->exception instanceof HasDescriptionInterface) {
+      $vars['title'] = null;
       $vars['description'] = $this->exception->getDescription();
     }
     else {

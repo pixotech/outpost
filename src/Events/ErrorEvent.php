@@ -12,14 +12,6 @@ class ErrorEvent extends Event {
     $this->line = $line;
   }
 
-  public function getColor() {
-    return EventMessage::WHITE_ON_RED;
-  }
-
-  public function getLocation() {
-    return "Error";
-  }
-
   public function getLogMessage() {
     return sprintf("%s (%s, line %s)", $this->message, $this->file, $this->line);
   }
