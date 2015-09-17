@@ -22,8 +22,8 @@
   },
   "autoload": {
     "psr-4": {
-      "Outpost\\": "src/",
-      "Outpost\\Mocks": "test/Mocks/"
+      "Outpost\\": "src",
+      "Outpost\\Mocks\\": "test/Mocks"
     }
   }
 }
