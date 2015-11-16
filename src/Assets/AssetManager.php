@@ -10,16 +10,17 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AssetManager implements AssetManagerInterface {
 
-  /**
-   * @var SiteInterface
-   */
-  protected $site;
 
-  /**
-   * @param SiteInterface $site
-   */
-  public function __construct(SiteInterface $site) {
-    $this->site = $site;
+  protected $baseUrl;
+
+  protected $cacheDirectory;
+
+  protected $generatedAssetsDirectory;
+
+  public function __construct($baseUrl, $generatedAssetsDirectory, $cacheDirectory) {
+    $this->baseUrl = $baseUrl;
+    $this->generatedAssetsDirectory = $generatedAssetsDirectory;
+    $this->cacheDirectory = $cacheDirectory;
   }
 
   /**
@@ -39,7 +40,6 @@ class AssetManager implements AssetManagerInterface {
   public function createAssetMarker(AssetInterface $asset) {
     $key = $asset->getKey();
     file_put_contents($this->getAssetMarkerPath($key), serialize($asset));
-    $this->site->report(new MarkerCreatedEvent($asset));
   }
 
   /**
@@ -48,23 +48,27 @@ class AssetManager implements AssetManagerInterface {
    */
   public function generateAsset(AssetInterface $asset) {
     $file = new \SplFileInfo($this->getLocalAssetPath($asset));
-    $asset->generate($this->site, $file);
-    if ($file->isFile()) $this->site->report(new AssetGeneratedEvent($asset));
-    else throw new \Exception("Could not create asset: " . $asset->getKey());
+    $asset->generate($file, $this);
+    if (!$file->isFile()) throw new \Exception("Could not create asset: " . $asset->getKey());
+  }
+
+  public function getAsset(AssetInterface $asset) {
+    if (!$this->hasLocalAsset($asset)) $this->createAssetMarker($asset);
+    return new LocalAsset($asset, $this->getAssetUrl($asset));
   }
 
   /**
    * @return string
    */
   public function getAssetBaseUrl() {
-    return $this->site->getEnvironment()->getAssetBaseUrl();
+    return $this->baseUrl;
   }
 
   /**
    * @return string
    */
   public function getAssetCacheDirectory() {
-    return $this->site->getEnvironment()->getAssetCacheDirectory();
+    return $this->cacheDirectory;
   }
 
   /**
@@ -123,7 +127,7 @@ class AssetManager implements AssetManagerInterface {
    * @return string
    */
   public function getGeneratedAssetsDirectory() {
-    return $this->site->getEnvironment()->getGeneratedAssetsDirectory();
+    return $this->generatedAssetsDirectory;
   }
 
   /**
@@ -135,13 +139,12 @@ class AssetManager implements AssetManagerInterface {
   }
 
   /**
-   * @param Request $request
+   * @param string $key
    * @return \SplFileInfo
    */
-  public function getRequestedAssetFile(Request $request) {
-    $key = $this->getRequestedAssetKey($request);
+  public function getRequestedAssetFile($key) {
     $asset = $this->getAssetMarker($key);
-    $this->clearAssetMarker($key);
+    #$this->clearAssetMarker($key);
     $file = $this->getAssetFile($asset);
     return $file;
   }
@@ -152,25 +155,6 @@ class AssetManager implements AssetManagerInterface {
    */
   public function getRequestedAssetKey(Request $request) {
     return preg_match($this->getAssetPathRegex(), $request->getPathInfo(), $m) ? $m[1] : null;
-  }
-
-  /**
-   * @param Request $request
-   * @return Response
-   * @throws \Outpost\Exceptions\UnrecognizedRequestException
-   */
-  public function getResponse(Request $request) {
-    try {
-      return new BinaryFileResponse($this->getRequestedAssetFile($request), 200);
-    }
-    catch (\OutOfBoundsException $e) {
-      $this->site->report(new ExceptionEvent($e));
-      return new Response(null, 404);
-    }
-    catch (\Exception $e) {
-      $this->site->report(new ExceptionEvent($e));
-      return new Response(null, 500);
-    }
   }
 
   /**

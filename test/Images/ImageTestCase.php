@@ -7,7 +7,7 @@
  * @license http://opensource.org/licenses/NCSA NCSA
  */
 
-namespace Outpost\Images;
+namespace Outpost\Assets\Images;
 
 abstract class ImageTestCase extends \PHPUnit_Framework_TestCase {
 

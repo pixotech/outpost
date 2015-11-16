@@ -9,16 +9,12 @@
 
 namespace Outpost;
 
-use Outpost\Assets\AssetManagerInterface;
-use Outpost\Environments\EnvironmentInterface;
 use Outpost\Events\EventInterface;
-use Outpost\Events\ListenerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 interface SiteInterface {
 
-  public function addListener(ListenerInterface $listener);
+  public function addListener(callable $listener);
 
   /**
    * @param callable $resource
@@ -27,58 +23,27 @@ interface SiteInterface {
   public function get(callable $resource);
 
   /**
-   * @return AssetManagerInterface
-   */
-  public function getAssetManager();
-
-  /**
    * @return \Outpost\Cache\CacheInterface
    */
   public function getCache();
 
   /**
-   * @return EnvironmentInterface
+   * @return \GuzzleHttp\ClientInterface
    */
-  public function getEnvironment();
+  public function getClient();
 
     /**
-   * @param string $name
-   * @return mixed
+   * @return \Phroute\Phroute\RouteCollector
    */
-  public function getSetting($name);
-
-  /**
-   * @param string $name
-   * @return mixed
-   */
-  public function getSecret($name);
-
-  /**
-   * @param string $name
-   * @return bool
-   */
-  public function hasSetting($name);
-
-  /**
-   * @param string $name
-   * @return bool
-   */
-  public function hasSecret($name);
-
-  /**
-   * @param Request $request
-   * @return Response
-   */
-  public function makeResponse(Request $request);
+  public function getRouter();
 
   /**
    * @param EventInterface $event
    */
   public function report(EventInterface $event);
 
-  /**
+    /**
    * @param Request $request
-   * @return Response
    */
   public function respond(Request $request);
 }

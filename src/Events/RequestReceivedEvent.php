@@ -15,6 +15,6 @@ class RequestReceivedEvent extends Event {
    * @return string
    */
   public function getLogMessage() {
-    return $this->request->getPathInfo();
+    return "Request received: " . $this->request->getPathInfo();
   }
 }

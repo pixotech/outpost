@@ -9,6 +9,8 @@
 
 namespace Outpost\Assets;
 
+use Outpost\Assets\Files\FileInterface;
+
 interface StorageInterface {
 
   /**

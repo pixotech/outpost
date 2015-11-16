@@ -9,26 +9,24 @@
 
 namespace Outpost;
 
-use Outpost\Assets\AssetManager;
+use GuzzleHttp\Client;
 use Outpost\Cache\Cache;
-use Outpost\Environments\EnvironmentInterface;
 use Outpost\Cache\CacheableInterface;
 use Outpost\Events\EventInterface;
-use Outpost\Events\ExceptionEvent;
-use Outpost\Events\ListenerInterface;
 use Outpost\Events\RequestReceivedEvent;
-use Outpost\Events\ResponseCompleteEvent;
-use Outpost\Exceptions\InvalidResponseException;
 use Outpost\Recovery\HelpResponse;
+use Outpost\Resources\ResourceInterface;
+use Outpost\Resources\SiteResourceInterface;
+use Outpost\Resources\UnavailableResourceException;
+use Outpost\Routing\Resolver;
+use Outpost\Routing\RouterDataResource;
+use Phroute\Phroute\Dispatcher;
+use Phroute\Phroute\RouteCollector;
+use Stash\Driver\Ephemeral;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 abstract class Site implements SiteInterface {
-
-  /**
-   * @var \Outpost\Assets\AssetManagerInterface
-   */
-  protected $assetManager;
 
   /**
    * @var \Outpost\Cache\Cache
@@ -36,25 +34,24 @@ abstract class Site implements SiteInterface {
   protected $cache;
 
   /**
-   * @var Environments\EnvironmentInterface
+   * @var \GuzzleHttp\ClientInterface
    */
-  protected $environment;
+  protected $client;
 
   /**
-   * @var Events\ListenerInterface[]
+   * @var callable[]
    */
   protected $listeners = [];
 
   /**
-   * @param EnvironmentInterface $environment
+   * @var RouteCollector
    */
-  public function __construct(EnvironmentInterface $environment) {
-    $this->environment = $environment;
-    $this->cache = $this->makeCache();
-    $this->assetManager = $this->makeAssetManager();
-  }
+  protected $router;
 
-  public function addListener(ListenerInterface $listener) {
+  /**
+   * @param callable $listener
+   */
+  public function addListener(callable $listener) {
     $this->listeners[] = $listener;
   }
 
@@ -63,25 +60,34 @@ abstract class Site implements SiteInterface {
    *
    * @param callable $resource
    * @return mixed
+   * @throws UnavailableResourceException
+   * @throws \Exception
    */
   public function get(callable $resource) {
-    if ($resource instanceof CacheableInterface) {
-      $key = $resource->getCacheKey();
-      $lifetime = $resource->getCacheLifetime();
-      /** @var callable $resource */
-      $result = $this->getCache()->get($key, $resource, $lifetime);
+    if ($resource instanceof SiteResourceInterface) {
+      $resource = clone $resource;
+      $resource->setSite($this);
     }
-    else {
-      $result = call_user_func($resource, $this);
+    try {
+      if ($resource instanceof CacheableInterface) {
+        $key = $resource->getCacheKey();
+        $lifetime = $resource->getCacheLifetime();
+        /** @var callable $resource */
+        $result = $this->getCache()->get($key, $resource, $lifetime);
+      }
+      else {
+        $result = call_user_func($resource);
+      }
+      return $result;
     }
-    return $result;
-  }
-
-  /**
-   * @return \Outpost\Assets\AssetManagerInterface
-   */
-  public function getAssetManager() {
-    return $this->assetManager;
+    catch (\Exception $exception) {
+      if ($resource instanceof ResourceInterface) {
+        throw new UnavailableResourceException($resource, $exception);
+      }
+      else {
+        throw $exception;
+      }
+    }
   }
 
   /**
@@ -91,114 +97,105 @@ abstract class Site implements SiteInterface {
    * @see \Outpost\Cache\Cache Cache
    */
   public function getCache() {
+    if (!isset($this->cache)) $this->cache = $this->makeCache();
     return $this->cache;
   }
 
   /**
-   * Get the local environment
-   *
-   * @return EnvironmentInterface
-   * @see \Outpost\Environment\EnvironmentInterface EnvironmentInterface
+   * @return \GuzzleHttp\ClientInterface
    */
-  public function getEnvironment() {
-    return $this->environment;
+  public function getClient() {
+    if (!isset($this->client)) $this->client = $this->makeClient();
+    return $this->client;
   }
 
   /**
-   * @param string $key
-   * @return mixed
+   * @return RouteCollector
    */
-  public function getSecret($key) {
-    return $this->getEnvironment()->getSecret($key);
-  }
-
-  /**
-   * Get the value of a site setting
-   *
-   * @param string $key
-   * @return mixed
-   */
-  public function getSetting($key) {
-    return $this->getEnvironment()->getSetting($key);
-  }
-
-  /**
-   * @param string $key
-   * @return bool
-   */
-  public function hasSetting($key) {
-    return $this->getEnvironment()->hasSetting($key);
-  }
-
-  /**
-   * @param string $key
-   * @return bool
-   */
-  public function hasSecret($key) {
-    return $this->getEnvironment()->hasSecret($key);
-  }
-
-  /**
-   * @param Request $request
-   * @return Response
-   */
-  public function makeResponse(Request $request) {
-    $this->report(new RequestReceivedEvent($request));
-    try {
-      if ($this->assetManager->isAssetRequest($request)) {
-        $response = $this->assetManager->getResponse($request);
-      }
-      else {
-        $response = $this->respond($request);
-      }
-      if (!($response instanceof Response)) {
-        throw new InvalidResponseException($this, $request, $response);
-      }
-      $this->report(new ResponseCompleteEvent($response, $request));
-    }
-    catch (\Exception $e) {
-      $response = $this->handleResponseException($e, $request);
-    }
-    return $response;
+  public function getRouter() {
+    if (!isset($this->router)) $this->router = $this->makeRouter();
+    return $this->router;
   }
 
   /**
    * @param EventInterface $event
    */
   public function report(EventInterface $event) {
-    foreach ($this->listeners as $listener) $listener->handleEvent($event, $this);
+    foreach ($this->listeners as $listener) call_user_func($listener, $event, $this);
   }
 
   /**
    * @param Request $request
-   * @return Response
    */
-  abstract public function respond(Request $request);
+  public function respond(Request $request) {
+    try {
+      $this->report(new RequestReceivedEvent($request));
+      $this->dispatch($request);
+    }
+    catch (\Exception $error) {
+      $this->recover($error, $request);
+    }
+  }
 
   /**
-   * @param \Exception $exception
    * @param Request $request
-   * @return Recovery\HelpResponse
    */
-  protected function handleResponseException(\Exception $exception, Request $request) {
-    $this->report(new ExceptionEvent($exception));
-    return $this->makeErrorResponse($exception, $request);
+  protected function dispatch(Request $request) {
+    $this->makeDispatcher($request)->dispatch($request->getMethod(), $request->getPathInfo());
   }
 
   /**
-   * @return AssetManager
+   * @return \Stash\Interfaces\DriverInterface
    */
-  protected function makeAssetManager() {
-    return new AssetManager($this);
+  protected function getCacheDriver() {
+    return new Ephemeral();
   }
 
   /**
-   * @param null|string $ns Namespace
+   * @return array
+   */
+  protected function getClientOptions() {
+    return [];
+  }
+
+  /**
    * @return \Outpost\Cache\Cache
    */
-  protected function makeCache($ns = null) {
-    $driver = $this->getEnvironment()->getCacheDriver();
-    return new Cache($this, $driver, $ns);
+  protected function makeCache() {
+    $driver = $this->getCacheDriver();
+    return new Cache($this, $driver);
+  }
+
+  /**
+   * @return Client
+   */
+  protected function makeClient() {
+    return new Client($this->getClientOptions());
+  }
+
+  /**
+   * @param Request $request
+   * @return Dispatcher
+   * @throws UnavailableResourceException
+   * @throws \Exception
+   */
+  protected function makeDispatcher(Request $request) {
+    return new Dispatcher($this->get(new RouterDataResource()), new Resolver($this, $request));
+  }
+
+  /**
+   * @param \Exception $error
+   * @return Recovery\HelpResponse
+   */
+  protected function makeErrorResponse(\Exception $error) {
+    return new HelpResponse($error);
+  }
+
+  /**
+   * @return RouteCollector
+   */
+  protected function makeRouter() {
+    return new RouteCollector();
   }
 
   /**
@@ -206,7 +203,14 @@ abstract class Site implements SiteInterface {
    * @param Request $request
    * @return Recovery\HelpResponse
    */
-  protected function makeErrorResponse(\Exception $error, Request $request) {
-    return new HelpResponse($error);
+  protected function recover(\Exception $error, Request $request) {
+    try {
+      $response = $this->makeErrorResponse($error);
+    }
+    catch (\Exception $e) {
+      $response = new Response($e->getMessage(), 500);
+    }
+    $response->prepare($request);
+    $response->send();
   }
 }

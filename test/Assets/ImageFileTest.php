@@ -9,6 +9,8 @@
 
 namespace Outpost\Assets;
 
+use Outpost\Assets\Files\ImageFile;
+
 class ImageFileTest extends \PHPUnit_Framework_TestCase {
 
   public function testGetAlt() {

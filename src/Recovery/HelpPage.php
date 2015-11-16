@@ -9,7 +9,6 @@
 
 namespace Outpost\Recovery;
 
-use Outpost\Html\Document;
 use Outpost\Recovery\Code\Excerpt;
 use Outpost\Recovery\Trace\Stack;
 use Outpost\SiteInterface;
@@ -45,16 +44,21 @@ class HelpPage {
     }
   }
 
+  protected function getKintTrace(\Exception $exception) {
+    return @\Kint::trace($exception->getTrace());
+  }
+
   protected function makePage() {
     if ($previous = $this->exception->getPrevious()) {
       $page = new HelpPage($previous);
       return $page->makePage();
     }
     $vars = [
-      'title'=> $this->makeTitle(),
+      'css' => file_get_contents(__DIR__ . '/../../templates/help.css'),
+      'title' => $this->makeTitle(),
       # 'excerpt' => $this->makeCodeExcerpt(),
       'exception' => $this->exception,
-      'trace' => @\Kint::trace($this->exception->getTrace()),
+      'trace' => $this->getKintTrace($this->exception),
     ];
     if ($this->exception instanceof HasDescriptionInterface) {
       $vars['title'] = null;
@@ -66,8 +70,7 @@ class HelpPage {
     if ($this->exception instanceof HasRepairInterface) {
       $vars['repairInstructions'] = $this->exception->getRepair();
     }
-    $document = new Document($this->render("page.php", $vars), 'ATTENTION');
-    $document->addStyles(file_get_contents(__DIR__ . '/templates/help.css'));
+    $document = $this->render($vars);
     return $document;
   }
 
@@ -89,10 +92,10 @@ class HelpPage {
     return self::isOutpostPath($this->exception->getFile());
   }
 
-  protected function render($template, array $variables = []) {
+  protected function render(array $variables = []) {
     extract($variables);
     ob_start();
-    include __DIR__ . "/templates/$template";
+    include __DIR__ . '/../../templates/help.php';
     $content = ob_get_contents();
     ob_end_clean();
     return $content;

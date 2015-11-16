@@ -7,7 +7,7 @@
  * @license http://opensource.org/licenses/NCSA NCSA
  */
 
-namespace Outpost\Images\Imagemagick\Geometry;
+namespace Outpost\Assets\Images\Imagemagick\Geometry;
 
 class DimensionsTest extends \PHPUnit_Framework_TestCase {
 

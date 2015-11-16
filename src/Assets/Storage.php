@@ -9,7 +9,9 @@
 
 namespace Outpost\Assets;
 
-use Outpost\Images\ImageInterface;
+use Outpost\Assets\Files\FileInterface;
+use Outpost\Assets\Files\ImageFile;
+use Outpost\Assets\Images\ImageInterface;
 
 class Storage implements \IteratorAggregate, StorageInterface {
 

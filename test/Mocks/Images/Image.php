@@ -9,7 +9,8 @@
 
 namespace Outpost\Mocks\Images;
 
-use Outpost\Images\ImageInterface;
+use Outpost\Assets\AssetManagerInterface;
+use Outpost\Assets\Images\ImageInterface;
 use Outpost\SiteInterface;
 
 class Image implements ImageInterface {
@@ -17,7 +18,7 @@ class Image implements ImageInterface {
   public $alt = '';
   public $key;
 
-  public function generate(SiteInterface $site, \SplFileInfo $file) {
+  public function generate(\SplFileInfo $file, AssetManagerInterface $assets) {
 
   }
 

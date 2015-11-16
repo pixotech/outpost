@@ -9,6 +9,8 @@
 
 namespace Outpost\Assets;
 
+use Outpost\Assets\Files\File;
+
 class FileTest extends \PHPUnit_Framework_TestCase {
 
   public function testGetPath() {

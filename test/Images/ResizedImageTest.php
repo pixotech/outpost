@@ -7,7 +7,7 @@
  * @license http://opensource.org/licenses/NCSA NCSA
  */
 
-namespace Outpost\Images;
+namespace Outpost\Assets\Images;
 
 use Outpost\Mocks\Images\Image;
 

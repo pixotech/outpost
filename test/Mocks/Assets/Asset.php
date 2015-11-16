@@ -3,6 +3,7 @@
 namespace Outpost\Mocks\Assets;
 
 use Outpost\Assets\AssetInterface;
+use Outpost\Assets\AssetManagerInterface;
 use Outpost\SiteInterface;
 
 class Asset extends \Outpost\Assets\Asset implements AssetInterface {
@@ -15,7 +16,7 @@ class Asset extends \Outpost\Assets\Asset implements AssetInterface {
     $this->extension = $extension;
   }
 
-  public function generate(SiteInterface $site, \SplFileInfo $file) {
+  public function generate(\SplFileInfo $file, AssetManagerInterface $assets) {
     // TODO: Implement generate() method.
   }
 

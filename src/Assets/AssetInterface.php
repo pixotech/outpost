@@ -12,7 +12,7 @@ namespace Outpost\Assets;
 use Outpost\SiteInterface;
 
 interface AssetInterface {
-  public function generate(SiteInterface $site, \SplFileInfo $file);
+  public function generate(\SplFileInfo $file, AssetManagerInterface $assets);
   public function getExtension();
   public function getKey();
 }
