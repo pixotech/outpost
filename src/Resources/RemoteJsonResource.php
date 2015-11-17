@@ -6,7 +6,8 @@ class RemoteJsonResource extends RemoteResource {
 
   protected $config = [];
 
-  public function __config(array $config = []) {
+  public function __construct($url = '', array $config = []) {
+    parent::__construct($url);
     $this->config = $config;
   }
 

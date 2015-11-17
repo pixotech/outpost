@@ -4,6 +4,18 @@ namespace Outpost\Resources;
 
 class RemoteResource extends SiteResource implements RemoteResourceInterface {
 
+  protected $url = '';
+
+  /**
+   * @param string $url
+   */
+  public function __construct($url = null) {
+    if (!empty($url)) $this->url = $url;
+  }
+
+  /**
+   * @return \GuzzleHttp\Message\ResponseInterface
+   */
   public function __invoke() {
     return $this->getClient()->send($this->getRequest());
   }
@@ -52,6 +64,6 @@ class RemoteResource extends SiteResource implements RemoteResourceInterface {
    * @return string
    */
   protected function getRequestUrl() {
-    return '';
+    return $this->url;
   }
 }
