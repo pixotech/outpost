@@ -26,7 +26,7 @@ use Stash\Driver\Ephemeral;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-abstract class Site implements SiteInterface {
+class Site implements SiteInterface {
 
   /**
    * @var \Outpost\Cache\Cache
@@ -49,10 +49,15 @@ abstract class Site implements SiteInterface {
   protected $router;
 
   /**
-   * @param callable $listener
+   * Shorthand for Site::get()
+   *
+   * @param callable $resource
+   * @return mixed
+   * @throws UnavailableResourceException
+   * @throws \Exception
    */
-  public function addListener(callable $listener) {
-    $this->listeners[] = $listener;
+  public function __invoke(callable $resource) {
+    return $this->get($resource);
   }
 
   /**
@@ -135,6 +140,23 @@ abstract class Site implements SiteInterface {
     catch (\Exception $error) {
       $this->recover($error, $request);
     }
+  }
+
+  /**
+   * @param string $method
+   * @param string $path
+   * @param callable $handler
+   * @param array $filters
+   */
+  public function route($method, $path, callable $handler, array $filters = []) {
+    $this->getRouter()->addRoute($method, $path, $handler, $filters);
+  }
+
+  /**
+   * @param callable $listener
+   */
+  public function subscribe(callable $listener) {
+    $this->listeners[] = $listener;
   }
 
   /**
