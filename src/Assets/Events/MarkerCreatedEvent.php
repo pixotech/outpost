@@ -1,7 +1,8 @@
 <?php
 
-namespace Outpost\Assets;
+namespace Outpost\Assets\Events;
 
+use Outpost\Assets\AssetInterface;
 use Outpost\Events\Event;
 
 class MarkerCreatedEvent extends Event {

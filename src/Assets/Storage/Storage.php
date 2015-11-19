@@ -7,20 +7,19 @@
  * @license http://opensource.org/licenses/NCSA NCSA
  */
 
-namespace Outpost\Assets;
+namespace Outpost\Assets\Storage;
 
+use Outpost\Assets\AssetInterface;
 use Outpost\Assets\Files\FileInterface;
 use Outpost\Assets\Files\ImageFile;
 use Outpost\Assets\Images\ImageInterface;
 
-class Storage implements \IteratorAggregate, StorageInterface {
+abstract class Storage implements \IteratorAggregate, StorageInterface {
 
-  protected $baseUrl;
-  protected $directoryPath;
+  protected $path;
 
-  public function __construct($path, $url) {
-    $this->directoryPath = $path;
-    $this->baseUrl = $url;
+  public function __construct($path) {
+    $this->path = $path;
   }
 
   public function getFile(AssetInterface $asset) {
@@ -51,7 +50,7 @@ class Storage implements \IteratorAggregate, StorageInterface {
   }
 
   protected function getDirectoryIterator() {
-    return new \RecursiveDirectoryIterator($this->directoryPath);
+    return new \RecursiveDirectoryIterator($this->path);
   }
 
   protected function makeFile(AssetInterface $asset) {
@@ -64,10 +63,6 @@ class Storage implements \IteratorAggregate, StorageInterface {
   }
 
   protected function makePath(AssetInterface $asset) {
-    return $this->directoryPath . '/' . $asset->getKey() . '.' . $asset->getExtension();
-  }
-
-  protected function makeUrl(AssetInterface $asset) {
-    return $this->baseUrl . '/' . $asset->getKey();
+    return $this->path . '/' . $asset->getKey() . '.' . $asset->getExtension();
   }
 }

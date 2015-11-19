@@ -10,7 +10,7 @@
 namespace Outpost\Assets\Images\Overlays;
 
 use Outpost\Assets\AssetManagerInterface;
-use Outpost\Assets\StorageInterface;
+use Outpost\Assets\Storage\StorageInterface;
 use Outpost\Assets\Files\FileInterface;
 use Outpost\Assets\Images\Image;
 use Outpost\SiteInterface;

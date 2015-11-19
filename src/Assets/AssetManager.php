@@ -2,6 +2,8 @@
 
 namespace Outpost\Assets;
 
+use Outpost\Assets\Storage\PrivateStorage;
+use Outpost\Assets\Storage\PublicStorage;
 use Outpost\Events\ExceptionEvent;
 use Outpost\SiteInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -10,17 +12,19 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AssetManager implements AssetManagerInterface {
 
+  /**
+   * @var PublicStorage
+   */
+  protected $assets;
 
-  protected $baseUrl;
+  /**
+   * @var PrivateStorage
+   */
+  protected $markers;
 
-  protected $cacheDirectory;
-
-  protected $generatedAssetsDirectory;
-
-  public function __construct($baseUrl, $generatedAssetsDirectory, $cacheDirectory) {
-    $this->baseUrl = $baseUrl;
-    $this->generatedAssetsDirectory = $generatedAssetsDirectory;
-    $this->cacheDirectory = $cacheDirectory;
+  public function __construct(PublicStorage $assetStorage, PrivateStorage $markerStorage) {
+    $this->assets = $assetStorage;
+    $this->markers = $markerStorage;
   }
 
   /**
