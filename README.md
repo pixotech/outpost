@@ -20,8 +20,8 @@ Outpost is developed by [Pixo][Pixo], in Urbana, IL.
 
 Outpost requires PHP 5.5+, and the following libraries:
 
-* [Guzzle][Guzzle] (HTTP client)
 * [Phroute][Phroute] (routing)
+* [Guzzle][Guzzle] (HTTP client)
 * [Stash][Stash] (caching)
 
 ## Quickstart
@@ -29,7 +29,7 @@ Outpost requires PHP 5.5+, and the following libraries:
 Create a new directory for your Outpost installation. From inside this directory, use [Composer][Composer] to install Outpost:
 
 ```
-composer require pixo/outpost dev-master
+composer require pixo/outpost
 ```
 
 You should now have `composer.json` and `composer.lock` files, and a `vendor` directory containing Outpost and its dependencies.
