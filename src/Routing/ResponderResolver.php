@@ -3,9 +3,10 @@
 namespace Outpost\Routing;
 
 use Outpost\SiteInterface;
+use Phroute\Phroute\HandlerResolverInterface;
 use Symfony\Component\HttpFoundation\Request;
 
-class Resolver implements ResolverInterface {
+class ResponderResolver implements HandlerResolverInterface {
 
   /**
    * @var Request
@@ -26,18 +27,16 @@ class Resolver implements ResolverInterface {
     $this->request = $request;
   }
 
-  public function getRequest() {
-    return $this->request;
-  }
-
   /**
-   * @param $route
+   * @param $responder
    * @return array
    */
-  public function resolve($route) {
-    if ($route instanceof RouteInterface) {
-      $route = new Response($this->site, $this->request, $route->getResponder());
+  public function resolve($responder) {
+    if ($responder instanceof ResponderInterface) {
+      $responder = clone $responder;
+      $responder->setRequest($this->request);
+      $responder->setSite($this->site);
     }
-    return $route;
+    return $responder;
   }
 }

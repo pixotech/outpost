@@ -19,9 +19,11 @@ use Outpost\Resources\ResourceInterface;
 use Outpost\Resources\SiteResourceInterface;
 use Outpost\Resources\UnavailableResourceException;
 use Outpost\Routing\Resolver;
-use Outpost\Routing\RouterDataResource;
+use Outpost\Routing\ResponderResolver;
+use Outpost\Routing\RouterInterface;
 use Phroute\Phroute\Dispatcher;
 use Phroute\Phroute\RouteCollector;
+use Phroute\Phroute\RouteDataProviderInterface;
 use Stash\Driver\Ephemeral;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -149,7 +151,14 @@ class Site implements SiteInterface {
    * @param array $filters
    */
   public function route($method, $path, callable $handler, array $filters = []) {
-    $this->getRouter()->addRoute($method, $path, $handler, $filters);
+    $router = $this->getRouter();
+    if ($router instanceof RouteDataProviderInterface) {
+      $this->getRouter()->addRoute($method, $path, $handler, $filters);
+      trigger_error("This method of adding routes is deprecated.", E_USER_DEPRECATED);
+    }
+    else {
+      throw new \BadMethodCallException();
+    }
   }
 
   /**
@@ -163,7 +172,16 @@ class Site implements SiteInterface {
    * @param Request $request
    */
   protected function dispatch(Request $request) {
-    $this->makeDispatcher($request)->dispatch($request->getMethod(), $request->getPathInfo());
+    $router = $this->getRouter();
+    if ($router instanceof RouterInterface) {
+      call_user_func($router, new Resolver($this, $request));
+      return;
+    }
+    if ($router instanceof RouteDataProviderInterface) {
+      $this->makeDispatcher($router, $request)->dispatch($request->getMethod(), $request->getPathInfo());
+      return;
+    }
+    throw new \UnexpectedValueException("Unrecognized router");
   }
 
   /**
@@ -196,13 +214,12 @@ class Site implements SiteInterface {
   }
 
   /**
+   * @param RouteDataProviderInterface $router
    * @param Request $request
    * @return Dispatcher
-   * @throws UnavailableResourceException
-   * @throws \Exception
    */
-  protected function makeDispatcher(Request $request) {
-    return new Dispatcher($this->get(new RouterDataResource()), new Resolver($this, $request));
+  protected function makeDispatcher(RouteDataProviderInterface $router, Request $request) {
+    return new Dispatcher($router->getData(), new ResponderResolver($this, $request));
   }
 
   /**
