@@ -83,7 +83,7 @@ class Site implements SiteInterface {
         $result = $this->getCache()->get($key, $resource, $lifetime);
       }
       else {
-        $result = call_user_func($resource);
+        $result = call_user_func($resource, $this);
       }
       return $result;
     }
