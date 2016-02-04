@@ -28,7 +28,7 @@ use Stash\Driver\Ephemeral;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class Site implements SiteInterface {
+class Site implements SiteInterface, \ArrayAccess {
 
   /**
    * @var \Outpost\Cache\Cache
@@ -122,6 +122,22 @@ class Site implements SiteInterface {
   public function getRouter() {
     if (!isset($this->router)) $this->router = $this->makeRouter();
     return $this->router;
+  }
+
+  public function offsetExists($urlName) {
+    return $this->getRouter()->offsetExists($urlName);
+  }
+
+  public function offsetGet($urlName) {
+    return $this->getRouter()->offsetGet($urlName);
+  }
+
+  public function offsetSet($route, $responder) {
+    $this->getRouter()->offsetSet($route, $responder);
+  }
+
+  public function offsetUnset($route) {
+    $this->getRouter()->offsetUnset($route);
   }
 
   /**

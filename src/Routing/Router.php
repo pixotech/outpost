@@ -7,6 +7,9 @@ use Phroute\Phroute\RouteCollector;
 
 class Router implements RouterInterface, \ArrayAccess {
 
+  /**
+   * @var RouteCollector
+   */
   protected $router;
 
   /**
@@ -23,12 +26,12 @@ class Router implements RouterInterface, \ArrayAccess {
     return $this->getRouter()->route($name, $variables);
   }
 
-  public function offsetExists($route) {
-    return array_key_exists(Route::normalize($route), $this->routes);
+  public function offsetExists($name) {
+    return $this->getRouter()->hasRoute($name);
   }
 
-  public function offsetGet($route) {
-    return $this->routes[Route::normalize($route)];
+  public function offsetGet($name) {
+    return new RouteUrl($this->getRouter(), $name);
   }
 
   public function offsetSet($route, $responder) {
@@ -55,6 +58,9 @@ class Router implements RouterInterface, \ArrayAccess {
     $this->router = null;
   }
 
+  /**
+   * @return RouteCollector
+   */
   protected function getRouter() {
     if (!isset($this->router)) $this->router = $this->makeRouter();
     return $this->router;
