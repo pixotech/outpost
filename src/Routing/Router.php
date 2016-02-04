@@ -32,7 +32,10 @@ class Router implements RouterInterface, \ArrayAccess {
   }
 
   public function offsetSet($route, $responder) {
-    if (is_array($responder)) list($name, $responder) = each($responder);
+    if (is_array($responder)) {
+      $name = $route;
+      list($route, $responder) = each($responder);
+    }
     if (!is_callable($responder)) throw new \InvalidArgumentException();
     $this->route($route, $responder, !empty($name) ? $name : null);
     $this->clearRouter();
