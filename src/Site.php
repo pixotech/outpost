@@ -3,7 +3,7 @@
 /**
  * @package Outpost
  * @author Pixo <info@pixotech.com>
- * @copyright 2015, Pixo
+ * @copyright 2016, Pixo
  * @license http://opensource.org/licenses/NCSA NCSA
  */
 
@@ -164,17 +164,9 @@ class Site implements SiteInterface, \ArrayAccess {
    * @param string $method
    * @param string $path
    * @param callable $handler
-   * @param array $filters
    */
-  public function route($method, $path, callable $handler, array $filters = []) {
-    $router = $this->getRouter();
-    if ($router instanceof RouteDataProviderInterface) {
-      $this->getRouter()->addRoute($method, $path, $handler, $filters);
-      trigger_error("This method of adding routes is deprecated.", E_USER_DEPRECATED);
-    }
-    else {
-      throw new \BadMethodCallException();
-    }
+  public function route($method, $path, callable $handler) {
+    $this->getRouter()->addRoute($method, $path, $handler);
   }
 
   /**

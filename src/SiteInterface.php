@@ -3,7 +3,7 @@
 /**
  * @package Outpost
  * @author Pixo <info@pixotech.com>
- * @copyright 2015, Pixo
+ * @copyright 2016, Pixo
  * @license http://opensource.org/licenses/NCSA NCSA
  */
 
@@ -49,9 +49,8 @@ interface SiteInterface {
    * @param string $method
    * @param string $path
    * @param callable $handler
-   * @param array $filters
    */
-  public function route($method, $path, callable $handler, array $filters = []);
+  public function route($method, $path, callable $handler);
 
   /**
    * @param callable $listener
