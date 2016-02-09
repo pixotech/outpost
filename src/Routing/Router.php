@@ -5,7 +5,7 @@ namespace Outpost\Routing;
 use Phroute\Phroute\Dispatcher;
 use Phroute\Phroute\RouteCollector;
 
-class Router implements RouterInterface, \ArrayAccess {
+class Router implements RouterInterface {
 
   /**
    * @var RouteCollector
@@ -20,6 +20,14 @@ class Router implements RouterInterface, \ArrayAccess {
   public function __invoke(ResolverInterface $resolver) {
     $request = $resolver->getRequest();
     return $this->makeDispatcher($resolver)->dispatch($request->getMethod(), $request->getPathInfo());
+  }
+
+  /**
+   * @return RouteCollector
+   */
+  public function getRouter() {
+    if (!isset($this->router)) $this->router = $this->makeRouter();
+    return $this->router;
   }
 
   public function makeUrl($name, array $variables = []) {
@@ -56,14 +64,6 @@ class Router implements RouterInterface, \ArrayAccess {
 
   protected function clearRouter() {
     $this->router = null;
-  }
-
-  /**
-   * @return RouteCollector
-   */
-  protected function getRouter() {
-    if (!isset($this->router)) $this->router = $this->makeRouter();
-    return $this->router;
   }
 
   protected function makeDispatcher(ResolverInterface $resolver) {

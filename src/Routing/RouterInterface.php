@@ -2,12 +2,17 @@
 
 namespace Outpost\Routing;
 
-interface RouterInterface {
+interface RouterInterface extends \ArrayAccess {
 
   /**
    * @param ResolverInterface $resolver
    */
   public function __invoke(ResolverInterface $resolver);
+
+  /**
+   * @return \Phroute\Phroute\RouteCollector
+   */
+  public function getRouter();
 
   public function makeUrl($name, array $variables = []);
 

@@ -36,7 +36,13 @@ class Resolver implements ResolverInterface {
    */
   public function resolve($route) {
     if ($route instanceof RouteInterface) {
-      $route = new Response($this->site, $this->request, $route->getResponder());
+      return new Response($this->site, $this->request, $route->getResponder());
+    }
+    if ($route instanceof ResponderInterface) {
+      $responder = clone $route;
+      $responder->setRequest($this->request);
+      $responder->setSite($this->site);
+      return $responder;
     }
     return $route;
   }

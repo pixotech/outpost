@@ -19,8 +19,7 @@ use Outpost\Resources\ResourceInterface;
 use Outpost\Resources\SiteResourceInterface;
 use Outpost\Resources\UnavailableResourceException;
 use Outpost\Routing\Resolver;
-use Outpost\Routing\ResponderResolver;
-use Outpost\Routing\RouterInterface;
+use Outpost\Routing\Router;
 use Phroute\Phroute\Dispatcher;
 use Phroute\Phroute\RouteCollector;
 use Phroute\Phroute\RouteDataProviderInterface;
@@ -46,9 +45,9 @@ class Site implements SiteInterface, \ArrayAccess {
   protected $listeners = [];
 
   /**
-   * @var RouteCollector
+   * @var Routing\RouterInterface
    */
-  protected $router;
+  private $router;
 
   /**
    * Shorthand for Site::get()
@@ -120,24 +119,23 @@ class Site implements SiteInterface, \ArrayAccess {
    * @return RouteCollector
    */
   public function getRouter() {
-    if (!isset($this->router)) $this->router = $this->makeRouter();
-    return $this->router;
+    return $this->getRoutingHandler()->getRouter();
   }
 
   public function offsetExists($urlName) {
-    return $this->getRouter()->offsetExists($urlName);
+    return $this->getRoutingHandler()->offsetExists($urlName);
   }
 
   public function offsetGet($urlName) {
-    return $this->getRouter()->offsetGet($urlName);
+    return $this->getRoutingHandler()->offsetGet($urlName);
   }
 
   public function offsetSet($route, $responder) {
-    $this->getRouter()->offsetSet($route, $responder);
+    $this->getRoutingHandler()->offsetSet($route, $responder);
   }
 
   public function offsetUnset($route) {
-    $this->getRouter()->offsetUnset($route);
+    $this->getRoutingHandler()->offsetUnset($route);
   }
 
   /**
@@ -166,7 +164,7 @@ class Site implements SiteInterface, \ArrayAccess {
    * @param callable $handler
    */
   public function route($method, $path, callable $handler) {
-    $this->getRouter()->addRoute($method, $path, $handler);
+    $this->getRoutingHandler()->route("$method $path", $handler);
   }
 
   /**
@@ -181,15 +179,7 @@ class Site implements SiteInterface, \ArrayAccess {
    */
   protected function dispatch(Request $request) {
     $router = $this->getRouter();
-    if ($router instanceof RouterInterface) {
-      call_user_func($router, new Resolver($this, $request));
-      return;
-    }
-    if ($router instanceof RouteDataProviderInterface) {
-      $this->makeDispatcher($router, $request)->dispatch($request->getMethod(), $request->getPathInfo());
-      return;
-    }
-    throw new \UnexpectedValueException("Unrecognized router");
+    $this->makeDispatcher($router, $request)->dispatch($request->getMethod(), $request->getPathInfo());
   }
 
   /**
@@ -227,7 +217,7 @@ class Site implements SiteInterface, \ArrayAccess {
    * @return Dispatcher
    */
   protected function makeDispatcher(RouteDataProviderInterface $router, Request $request) {
-    return new Dispatcher($router->getData(), new ResponderResolver($this, $request));
+    return new Dispatcher($router->getData(), new Resolver($this, $request));
   }
 
   /**
@@ -259,5 +249,18 @@ class Site implements SiteInterface, \ArrayAccess {
     }
     $response->prepare($request);
     $response->send();
+  }
+
+  /**
+   * @return Routing\RouterInterface
+   * @since 1.1.0
+   */
+  private function getRoutingHandler() {
+    if (!isset($this->router)) $this->makeRoutingHandler();
+    return $this->router;
+  }
+
+  private function makeRoutingHandler() {
+    $this->router = new Router();
   }
 }
