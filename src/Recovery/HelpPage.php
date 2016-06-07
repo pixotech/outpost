@@ -9,99 +9,117 @@
 
 namespace Outpost\Recovery;
 
-use Outpost\Recovery\Code\Excerpt;
-use Outpost\Recovery\Trace\Stack;
+use Outpost\Exceptions\Exception;
 use Outpost\SiteInterface;
 
-class HelpPage {
+class HelpPage
+{
 
-  protected $exception;
+    protected $exception;
 
-  public static function getOutpostPath() {
-    return realpath(__DIR__ . '/..');
-  }
+    public static function forException(\Exception $e)
+    {
+        return <<<HELP
 
-  public static function isOutpostPath($path) {
-    $prefix = self::getOutpostPath() . '/';
-    return substr(realpath($path), 0, strlen($prefix)) == $prefix;
-  }
+<p>An exception was thrown:</p>
 
-  public static function makeExceptionString(\Exception $e) {
-    return sprintf("%s (%s, line %d)", $e->getMessage(), $e->getFile(), $e->getLine());
-  }
+<pre>{$e->getMessage()}</pre>
 
-  public function __construct(\Exception $exception, SiteInterface $site = null) {
-    $this->exception = $exception;
-    if (isset($site)) $this->site = $site;
-  }
+<p>The exception was thrown on line {$e->getLine()} of <code>{$e->getFile()}</code>.</p>
 
-  public function __toString() {
-    try {
-      return (string)$this->makePage();
+HELP;
     }
-    catch (\Exception $e) {
-      return self::makeExceptionString($e);
+
+    public static function getOutpostPath()
+    {
+        return realpath(__DIR__ . '/..');
     }
-  }
 
-  protected function getKintTrace(\Exception $exception) {
-    return @\Kint::trace($exception->getTrace());
-  }
-
-  protected function makePage() {
-    if ($previous = $this->exception->getPrevious()) {
-      $page = new HelpPage($previous);
-      return $page->makePage();
+    public static function isOutpostPath($path)
+    {
+        $prefix = self::getOutpostPath() . '/';
+        return substr(realpath($path), 0, strlen($prefix)) == $prefix;
     }
-    $vars = [
-      'css' => file_get_contents(__DIR__ . '/../../templates/help.css'),
-      'title' => $this->makeTitle(),
-      # 'excerpt' => $this->makeCodeExcerpt(),
-      'exception' => $this->exception,
-      'trace' => $this->getKintTrace($this->exception),
-    ];
-    if ($this->exception instanceof HasDescriptionInterface) {
-      $vars['title'] = null;
-      $vars['description'] = $this->exception->getDescription();
+
+    public static function makeExceptionString(\Exception $e)
+    {
+        return sprintf("%s (%s, line %d)", $e->getMessage(), $e->getFile(), $e->getLine());
     }
-    else {
-      $vars['description'] = '<h1>' . $this->exception->getMessage() . '</h1>';
+
+    public function __construct(\Exception $exception, SiteInterface $site = null)
+    {
+        $this->exception = $exception;
+        if (isset($site)) $this->site = $site;
     }
-    if ($this->exception instanceof HasRepairInterface) {
-      $vars['repairInstructions'] = $this->exception->getRepair();
+
+    public function __toString()
+    {
+        try {
+            return (string)$this->makePage();
+        } catch (\Exception $e) {
+            return self::makeExceptionString($e);
+        }
     }
-    $document = $this->render($vars);
-    return $document;
-  }
 
-  protected function makeCodeExcerpt() {
-    return new Excerpt($this->exception->getFile(), $this->exception->getLine());
-  }
+    protected function getBody()
+    {
+        if ($this->exception instanceof Exception) {
+            return $this->exception->getHelp();
+        }
+        return self::forException($this->exception);
+    }
 
-  protected function makeTitle() {
-    if ($message = $this->exception->getMessage()) return $message;
-    $exceptionClass = new \ReflectionClass($this->exception);
-    return $exceptionClass->getShortName();
-  }
+    protected function getStylesheet()
+    {
+        return <<<CSS
 
-  protected function makeTrace() {
-    return new Stack($this->exception);
-  }
+body {
+    margin: 0;
+    padding: 5vh 10vw;
+    background-color: #fff;
+    color: #060606;
+    line-height: 1.35em;
+    font-size: 1.35em;
+    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+pre {
+    background-color: #e6e6e6;
+    margin: 1rem -1rem;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 1rem;
+}
+address {
+    color: #999;
+    font-size: .6em;
+    font-style: italic;
+    margin-top: 4rem;
+}
 
-  protected function isOutpostException() {
-    return self::isOutpostPath($this->exception->getFile());
-  }
+CSS;
 
-  protected function render(array $variables = []) {
-    extract($variables);
-    ob_start();
-    include __DIR__ . '/../../templates/help.php';
-    $content = ob_get_contents();
-    ob_end_clean();
-    return $content;
-  }
+    }
 
-  protected function debug($var) {
-    return @\Kint::dump($var);
-  }
+    protected function makePage()
+    {
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>ATTENTION</title>
+    <style>{$this->getStylesheet()}</style>
+    <meta name="viewport" content="width=device-width">
+</head>
+<body>
+    {$this->getBody()}
+    <address>This page was generated automatically by your Outpost installation.</address>
+</body>
+</html>
+HTML;
+    }
+
+    protected function isOutpostException()
+    {
+        return self::isOutpostPath($this->exception->getFile());
+    }
 }
