@@ -23,7 +23,7 @@ class HelpPage
 
 <p>An exception was thrown:</p>
 
-<pre>{$e->getMessage()}</pre>
+<div class="output">{$e->getMessage()}</div>
 
 <p>The exception was thrown on line {$e->getLine()} of <code>{$e->getFile()}</code>.</p>
 
@@ -88,6 +88,21 @@ pre {
     max-width: 100%;
     overflow-x: auto;
     padding: 1rem;
+}
+.input {
+    background-color: #333;
+    color: #fff;
+    margin: 1.35em -1rem;
+    max-width: 100%;
+    padding: 1rem;
+    font-family: monospace;
+}
+.output {
+    background-color: #e6e6e6;
+    margin: 1.35em -1rem;
+    max-width: 100%;
+    padding: 1rem;
+    font-family: monospace;
 }
 address {
     color: #999;

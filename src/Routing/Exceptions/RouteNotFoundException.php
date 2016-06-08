@@ -19,7 +19,7 @@ class RouteNotFoundException extends Exception
     {
         return <<<HTML
 
-<pre><b>{$this->getRequestMethod()}</b> {$this->getRequestPath()}</pre>
+<div class="input"><b>{$this->getRequestMethod()}</b> {$this->getRequestPath()}</div>
 
 <p>No route is available to handle this request.</p>
 
