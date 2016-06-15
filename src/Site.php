@@ -9,15 +9,14 @@
 
 namespace Outpost;
 
-use GuzzleHttp\Client;
+use Monolog\Logger;
 use Outpost\Cache\Cache;
 use Outpost\Cache\CacheableInterface;
 use Outpost\Recovery\HelpResponse;
 use Outpost\Routing\Response;
 use Phroute\Phroute\Dispatcher;
-use Phroute\Phroute\Exception\HttpRouteNotFoundException;
 use Phroute\Phroute\RouteCollector;
-use Phroute\Phroute\RouteDataProviderInterface;
+use Psr\Log\LogLevel;
 use Stash\Driver\Ephemeral;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -30,14 +29,14 @@ class Site implements SiteInterface, \ArrayAccess
     protected $cache;
 
     /**
-     * @var \GuzzleHttp\ClientInterface
-     */
-    protected $client;
-
-    /**
      * @var callable[]
      */
     protected $listeners = [];
+
+    /**
+     * @var Logger
+     */
+    protected $log;
 
     /**
      * @var RouteCollector
@@ -104,13 +103,10 @@ class Site implements SiteInterface, \ArrayAccess
         return $this->cache;
     }
 
-    /**
-     * @return \GuzzleHttp\ClientInterface
-     */
-    public function getClient()
+    public function getLog()
     {
-        if (!isset($this->client)) $this->client = $this->makeClient();
-        return $this->client;
+        if (!isset($this->log)) $this->log = $this->makeLog();
+        return $this->log;
     }
 
     /**
@@ -120,6 +116,12 @@ class Site implements SiteInterface, \ArrayAccess
     {
         if (!isset($this->router)) $this->router = $this->makeRouter();
         return $this->router;
+    }
+
+    public function log($message, $level = null)
+    {
+        if (!isset($level)) $level = LogLevel::INFO;
+        $this->getLog()->log($level, $message);
     }
 
     public function offsetExists($urlName)
@@ -162,7 +164,7 @@ class Site implements SiteInterface, \ArrayAccess
     public function respond(Request $request)
     {
         try {
-            //$this->log("Request received: " . $request->getPathInfo());
+            $this->log("Request received: " . $request->getPathInfo());
             $this->dispatch($request);
         } catch (\Exception $error) {
             $this->recover($error, $request);
@@ -207,14 +209,6 @@ class Site implements SiteInterface, \ArrayAccess
     }
 
     /**
-     * @return array
-     */
-    protected function getClientOptions()
-    {
-        return [];
-    }
-
-    /**
      * @return \Outpost\Cache\Cache
      */
     protected function makeCache()
@@ -224,20 +218,20 @@ class Site implements SiteInterface, \ArrayAccess
     }
 
     /**
-     * @return Client
-     */
-    protected function makeClient()
-    {
-        return new Client($this->getClientOptions());
-    }
-
-    /**
      * @param \Exception $error
      * @return Recovery\HelpResponse
      */
     protected function makeErrorResponse(\Exception $error)
     {
         return new HelpResponse($error);
+    }
+
+    /**
+     * @return Logger
+     */
+    protected function makeLog()
+    {
+        return new Logger('outpost');
     }
 
     /**

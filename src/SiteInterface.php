@@ -9,7 +9,7 @@
 
 namespace Outpost;
 
-use Outpost\Events\EventInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 interface SiteInterface
@@ -35,9 +35,9 @@ interface SiteInterface
     public function getCache();
 
     /**
-     * @return \GuzzleHttp\ClientInterface
+     * @return LoggerInterface
      */
-    public function getClient();
+    public function getLog();
 
     /**
      * @return \Phroute\Phroute\RouteCollector
@@ -50,6 +50,12 @@ interface SiteInterface
      * @return string
      */
     public function getUrl($name, array $parameters = []);
+
+    /**
+     * @param string $message
+     * @param mixed $level
+     */
+    public function log($message, $level = null);
 
     /**
      * @param Request $request

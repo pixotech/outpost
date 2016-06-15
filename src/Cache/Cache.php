@@ -2,9 +2,8 @@
 
 namespace Outpost\Cache;
 
-use Outpost\Cache\Events\ItemFoundEvent;
-use Outpost\Cache\Events\ItemMissingEvent;
 use Outpost\SiteInterface;
+use Psr\Log\LogLevel;
 use Stash\Interfaces\DriverInterface;
 use Stash\Pool;
 
@@ -28,13 +27,13 @@ class Cache implements CacheInterface {
     $cached = $this->cache->getItem($key);
     $content = $cached->get();
     if ($cached->isMiss()) {
-      //$this->site->log(sprintf("Not found: %s", $key));
+      $this->site->log(sprintf("Not found: %s", $key), LogLevel::NOTICE);
       $cached->lock();
       $content = call_user_func($callback, $this->site);
       $cached->set($content, $lifetime);
     }
     else {
-      //$this->site->log(sprintf("Found: %s", $key));
+      $this->site->log(sprintf("Found: %s", $key));
     }
     return $content;
   }
