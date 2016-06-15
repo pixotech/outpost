@@ -12,22 +12,14 @@ namespace Outpost;
 use GuzzleHttp\Client;
 use Outpost\Cache\Cache;
 use Outpost\Cache\CacheableInterface;
-use Outpost\Events\EventInterface;
-use Outpost\Events\RequestReceivedEvent;
 use Outpost\Recovery\HelpResponse;
-use Outpost\Resources\ResourceInterface;
-use Outpost\Resources\SiteResourceInterface;
-use Outpost\Resources\UnavailableResourceException;
-use Outpost\Routing\Exceptions\RouteNotFoundException;
-use Outpost\Routing\Resolver;
-use Outpost\Routing\Router;
+use Outpost\Routing\Response;
 use Phroute\Phroute\Dispatcher;
 use Phroute\Phroute\Exception\HttpRouteNotFoundException;
 use Phroute\Phroute\RouteCollector;
 use Phroute\Phroute\RouteDataProviderInterface;
 use Stash\Driver\Ephemeral;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 class Site implements SiteInterface, \ArrayAccess
 {
@@ -48,7 +40,7 @@ class Site implements SiteInterface, \ArrayAccess
     protected $listeners = [];
 
     /**
-     * @var Routing\RouterInterface
+     * @var RouteCollector
      */
     private $router;
 
@@ -57,8 +49,6 @@ class Site implements SiteInterface, \ArrayAccess
      *
      * @param callable $resource
      * @return mixed
-     * @throws UnavailableResourceException
-     * @throws \Exception
      */
     public function __invoke(callable $resource)
     {
@@ -66,36 +56,40 @@ class Site implements SiteInterface, \ArrayAccess
     }
 
     /**
+     * @param string $method
+     * @param string $path
+     * @param callable $handler
+     * @param string $name
+     */
+    public function addRoute($method, $path, callable $handler, $name = null)
+    {
+        $route = $name ? [$path, $name] : $name;
+        $this->getRouter()->addRoute($method, $route, new Response($handler));
+    }
+
+    public function route($method, $path, callable $handler)
+    {
+        trigger_error("Site::route() is deprecated; use Site::addRoute() instead.", E_USER_DEPRECATED);
+        $this->addRoute($method, $path, $handler);
+    }
+
+    /**
      * Get a site resource
      *
      * @param callable $resource
      * @return mixed
-     * @throws UnavailableResourceException
-     * @throws \Exception
      */
     public function get(callable $resource)
     {
-        if ($resource instanceof SiteResourceInterface) {
-            $resource = clone $resource;
-            $resource->setSite($this);
+        if ($resource instanceof CacheableInterface) {
+            $key = $resource->getCacheKey();
+            $lifetime = $resource->getCacheLifetime();
+            /** @var callable $resource */
+            $result = $this->getCache()->get($key, $resource, $lifetime);
+        } else {
+            $result = call_user_func($resource, $this);
         }
-        try {
-            if ($resource instanceof CacheableInterface) {
-                $key = $resource->getCacheKey();
-                $lifetime = $resource->getCacheLifetime();
-                /** @var callable $resource */
-                $result = $this->getCache()->get($key, $resource, $lifetime);
-            } else {
-                $result = call_user_func($resource, $this);
-            }
-            return $result;
-        } catch (\Exception $exception) {
-            if ($resource instanceof ResourceInterface) {
-                throw new UnavailableResourceException($resource, $exception);
-            } else {
-                throw $exception;
-            }
-        }
+        return $result;
     }
 
     /**
@@ -124,35 +118,42 @@ class Site implements SiteInterface, \ArrayAccess
      */
     public function getRouter()
     {
-        return $this->getRoutingHandler()->getRouter();
+        if (!isset($this->router)) $this->router = $this->makeRouter();
+        return $this->router;
     }
 
     public function offsetExists($urlName)
     {
-        return $this->getRoutingHandler()->offsetExists($urlName);
+        throw new \BadMethodCallException("Not supported");
     }
 
     public function offsetGet($urlName)
     {
-        return $this->getRoutingHandler()->offsetGet($urlName);
+        throw new \BadMethodCallException("Not supported");
     }
 
-    public function offsetSet($route, $responder)
+    public function offsetSet($path, $responder)
     {
-        $this->getRoutingHandler()->offsetSet($route, $responder);
+        $name = null;
+        if (is_array($responder)) {
+            $name = $path;
+            list($path, $responder) = each($responder);
+        }
+        if (!is_callable($responder)) {
+            throw new \InvalidArgumentException();
+        }
+        if ($pos = strpos($path, ' ')) {
+            $method = substr($path, 0, $pos);
+            $path = ltrim(substr($path, $pos));
+        } else {
+            $method = 'GET';
+        }
+        $this->addRoute($method, $path, $responder, $name);
     }
 
     public function offsetUnset($route)
     {
-        $this->getRoutingHandler()->offsetUnset($route);
-    }
-
-    /**
-     * @param EventInterface $event
-     */
-    public function report(EventInterface $event)
-    {
-        foreach ($this->listeners as $listener) call_user_func($listener, $event, $this);
+        throw new \BadMethodCallException("Not supported");
     }
 
     /**
@@ -161,21 +162,11 @@ class Site implements SiteInterface, \ArrayAccess
     public function respond(Request $request)
     {
         try {
-            $this->report(new RequestReceivedEvent($request));
+            //$this->log("Request received: " . $request->getPathInfo());
             $this->dispatch($request);
         } catch (\Exception $error) {
             $this->recover($error, $request);
         }
-    }
-
-    /**
-     * @param string $method
-     * @param string $path
-     * @param callable $handler
-     */
-    public function route($method, $path, callable $handler)
-    {
-        $this->getRoutingHandler()->route("$method $path", $handler);
     }
 
     /**
@@ -187,16 +178,24 @@ class Site implements SiteInterface, \ArrayAccess
     }
 
     /**
+     * @param string $name
+     * @param array $parameters
+     * @return string
+     */
+    public function getUrl($name, array $parameters = [])
+    {
+        return $this->getRouter()->route($name, $parameters);
+    }
+
+    /**
      * @param Request $request
      */
     protected function dispatch(Request $request)
     {
-        try {
-            $router = $this->getRouter();
-            $this->makeDispatcher($router, $request)->dispatch($request->getMethod(), $request->getPathInfo());
-        } catch (HttpRouteNotFoundException $e) {
-            throw new RouteNotFoundException($request, $e);
-        }
+        $router = $this->getRouter();
+        $dispatcher = new Dispatcher($router->getData());
+        $response = $dispatcher->dispatch($request->getMethod(), $request->getPathInfo());
+        call_user_func($response->getResponder(), $this, $request, $response->getParameters());
     }
 
     /**
@@ -233,16 +232,6 @@ class Site implements SiteInterface, \ArrayAccess
     }
 
     /**
-     * @param RouteDataProviderInterface $router
-     * @param Request $request
-     * @return Dispatcher
-     */
-    protected function makeDispatcher(RouteDataProviderInterface $router, Request $request)
-    {
-        return new Dispatcher($router->getData(), new Resolver($this, $request));
-    }
-
-    /**
      * @param \Exception $error
      * @return Recovery\HelpResponse
      */
@@ -273,20 +262,5 @@ class Site implements SiteInterface, \ArrayAccess
         }
         $response->prepare($request);
         $response->send();
-    }
-
-    /**
-     * @return Routing\RouterInterface
-     * @since 1.1.0
-     */
-    private function getRoutingHandler()
-    {
-        if (!isset($this->router)) $this->makeRoutingHandler();
-        return $this->router;
-    }
-
-    private function makeRoutingHandler()
-    {
-        $this->router = new Router();
     }
 }

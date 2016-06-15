@@ -28,13 +28,13 @@ class Cache implements CacheInterface {
     $cached = $this->cache->getItem($key);
     $content = $cached->get();
     if ($cached->isMiss()) {
-      $this->site->report(new ItemMissingEvent($key, $callback, $lifetime));
+      //$this->site->log(sprintf("Not found: %s", $key));
       $cached->lock();
       $content = call_user_func($callback, $this->site);
       $cached->set($content, $lifetime);
     }
     else {
-      $this->site->report(new ItemFoundEvent($key, $callback, $lifetime));
+      //$this->site->log(sprintf("Found: %s", $key));
     }
     return $content;
   }
