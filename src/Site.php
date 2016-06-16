@@ -35,7 +35,7 @@ class Site implements SiteInterface, \ArrayAccess
     /**
      * @var RouteCollector
      */
-    private $router;
+    protected $router;
 
     /**
      * Shorthand for Site::get()
