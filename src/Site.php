@@ -60,12 +60,6 @@ class Site implements SiteInterface, \ArrayAccess
         $this->getRouter()->addRoute($method, $route, new Response($handler));
     }
 
-    public function route($method, $path, callable $handler)
-    {
-        trigger_error("Site::route() is deprecated; use Site::addRoute() instead.", E_USER_DEPRECATED);
-        $this->addRoute($method, $path, $handler);
-    }
-
     /**
      * Get a site resource
      *
