@@ -179,7 +179,9 @@ class Site implements SiteInterface, \ArrayAccess
     {
         try {
             $this->log("Request received: " . $request->getPathInfo());
-            $this->dispatch($request);
+            $dispatcher = new Dispatcher($this->getRouter()->getData());
+            $response = $dispatcher->dispatch($request->getMethod(), $request->getPathInfo());
+            call_user_func($response->getResponder(), $this, $request, $response->getParameters());
         } catch (\Exception $error) {
             $this->recover($error);
         }
@@ -196,21 +198,27 @@ class Site implements SiteInterface, \ArrayAccess
     }
 
     /**
-     * @param Request $request
-     */
-    protected function dispatch(Request $request)
-    {
-        $dispatcher = new Dispatcher($this->getRouter()->getData());
-        $response = $dispatcher->dispatch($request->getMethod(), $request->getPathInfo());
-        call_user_func($response->getResponder(), $this, $request, $response->getParameters());
-    }
-
-    /**
      * @return \Stash\Interfaces\DriverInterface
      */
     protected function getCacheDriver()
     {
         return new Ephemeral();
+    }
+
+    /**
+     * @return array
+     */
+    protected function getLogHandlers()
+    {
+        return [];
+    }
+
+    /**
+     * @return string
+     */
+    protected function getLogName()
+    {
+        return 'outpost';
     }
 
     /**
@@ -226,7 +234,7 @@ class Site implements SiteInterface, \ArrayAccess
      */
     protected function makeLog()
     {
-        return new Logger('outpost');
+        return new Logger($this->getLogName(), $this->getLogHandlers());
     }
 
     /**

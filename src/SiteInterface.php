@@ -10,6 +10,7 @@
 namespace Outpost;
 
 use Psr\Log\LoggerInterface;
+use Stash\Pool;
 use Symfony\Component\HttpFoundation\Request;
 
 interface SiteInterface
@@ -30,7 +31,7 @@ interface SiteInterface
     public function get(callable $resource);
 
     /**
-     * @return \Outpost\Cache\CacheInterface
+     * @return Pool
      */
     public function getCache();
 
@@ -56,6 +57,11 @@ interface SiteInterface
      * @param mixed $level
      */
     public function log($message, $level = null);
+
+    /**
+     * @param \Exception $error
+     */
+    public function recover(\Exception $error);
 
     /**
      * @param Request $request
