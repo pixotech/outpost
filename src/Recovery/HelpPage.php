@@ -54,6 +54,7 @@ HELP;
 
     public function __toString()
     {
+        header("HTTP/1.1 500 Internal Server Error");
         try {
             return (string)$this->makePage();
         } catch (\Exception $e) {

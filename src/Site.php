@@ -12,7 +12,7 @@ namespace Outpost;
 use Monolog\Logger;
 use Outpost\Cache\Cache;
 use Outpost\Cache\CacheableInterface;
-use Outpost\Recovery\HelpResponse;
+use Outpost\Recovery\HelpPage;
 use Outpost\Routing\Response;
 use Phroute\Phroute\Dispatcher;
 use Phroute\Phroute\RouteCollector;
@@ -27,11 +27,6 @@ class Site implements SiteInterface, \ArrayAccess
      * @var \Outpost\Cache\Cache
      */
     protected $cache;
-
-    /**
-     * @var callable[]
-     */
-    protected $listeners = [];
 
     /**
      * @var Logger
@@ -131,13 +126,13 @@ class Site implements SiteInterface, \ArrayAccess
 
     public function offsetGet($urlName)
     {
-        throw new \BadMethodCallException("Not supported");
+        return null;
     }
 
     public function offsetSet($path, $responder)
     {
         $name = null;
-        if (is_array($responder)) {
+        if (is_array($responder) && !is_callable($responder)) {
             $name = $path;
             list($path, $responder) = each($responder);
         }
@@ -159,6 +154,19 @@ class Site implements SiteInterface, \ArrayAccess
     }
 
     /**
+     * @param \Exception $error
+     */
+    public function recover(\Exception $error)
+    {
+        try {
+            print new HelpPage($error);
+        } catch (\Exception $e) {
+            header("HTTP/1.1 500 Internal Server Error");
+            print $e->getMessage();
+        }
+    }
+
+    /**
      * @param Request $request
      */
     public function respond(Request $request)
@@ -167,16 +175,8 @@ class Site implements SiteInterface, \ArrayAccess
             $this->log("Request received: " . $request->getPathInfo());
             $this->dispatch($request);
         } catch (\Exception $error) {
-            $this->recover($error, $request);
+            $this->recover($error);
         }
-    }
-
-    /**
-     * @param callable $listener
-     */
-    public function subscribe(callable $listener)
-    {
-        $this->listeners[] = $listener;
     }
 
     /**
@@ -186,7 +186,7 @@ class Site implements SiteInterface, \ArrayAccess
      */
     public function getUrl($name, array $parameters = [])
     {
-        return $this->getRouter()->route($name, $parameters);
+        return '/' . $this->getRouter()->route($name, $parameters);
     }
 
     /**
@@ -194,8 +194,7 @@ class Site implements SiteInterface, \ArrayAccess
      */
     protected function dispatch(Request $request)
     {
-        $router = $this->getRouter();
-        $dispatcher = new Dispatcher($router->getData());
+        $dispatcher = new Dispatcher($this->getRouter()->getData());
         $response = $dispatcher->dispatch($request->getMethod(), $request->getPathInfo());
         call_user_func($response->getResponder(), $this, $request, $response->getParameters());
     }
@@ -218,15 +217,6 @@ class Site implements SiteInterface, \ArrayAccess
     }
 
     /**
-     * @param \Exception $error
-     * @return Recovery\HelpResponse
-     */
-    protected function makeErrorResponse(\Exception $error)
-    {
-        return new HelpResponse($error);
-    }
-
-    /**
      * @return Logger
      */
     protected function makeLog()
@@ -240,21 +230,5 @@ class Site implements SiteInterface, \ArrayAccess
     protected function makeRouter()
     {
         return new RouteCollector();
-    }
-
-    /**
-     * @param \Exception $error
-     * @param Request $request
-     * @return Recovery\HelpResponse
-     */
-    protected function recover(\Exception $error, Request $request)
-    {
-        try {
-            $response = $this->makeErrorResponse($error);
-        } catch (\Exception $e) {
-            $response = new Response($e->getMessage(), 500);
-        }
-        $response->prepare($request);
-        $response->send();
     }
 }
