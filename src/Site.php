@@ -10,21 +10,20 @@
 namespace Outpost;
 
 use Monolog\Logger;
-use Outpost\Cache\Cache;
-use Outpost\Cache\CacheableInterface;
+use Outpost\Resources\CacheableInterface;
 use Outpost\Recovery\HelpPage;
 use Outpost\Routing\Response;
 use Phroute\Phroute\Dispatcher;
 use Phroute\Phroute\RouteCollector;
 use Psr\Log\LogLevel;
 use Stash\Driver\Ephemeral;
+use Stash\Pool;
 use Symfony\Component\HttpFoundation\Request;
 
 class Site implements SiteInterface, \ArrayAccess
 {
-
     /**
-     * @var \Outpost\Cache\Cache
+     * @var Pool
      */
     protected $cache;
 
@@ -79,7 +78,17 @@ class Site implements SiteInterface, \ArrayAccess
             $key = $resource->getCacheKey();
             $lifetime = $resource->getCacheLifetime();
             /** @var callable $resource */
-            $result = $this->getCache()->get($key, $resource, $lifetime);
+            $cached = $this->getCache()->getItem($key);
+            $result = $cached->get();
+            if ($cached->isMiss()) {
+                $this->log(sprintf("Not found: %s", $key), LogLevel::NOTICE);
+                $cached->lock();
+                $result = call_user_func($resource, $this);
+                $cached->set($result, $lifetime);
+            }
+            else {
+                $this->log(sprintf("Found: %s", $key));
+            }
         } else {
             $result = call_user_func($resource, $this);
         }
@@ -87,10 +96,7 @@ class Site implements SiteInterface, \ArrayAccess
     }
 
     /**
-     * Get the site cache
-     *
-     * @return \Outpost\Cache\Cache
-     * @see \Outpost\Cache\Cache Cache
+     * @return Pool
      */
     public function getCache()
     {
@@ -208,12 +214,11 @@ class Site implements SiteInterface, \ArrayAccess
     }
 
     /**
-     * @return \Outpost\Cache\Cache
+     * @return Pool
      */
     protected function makeCache()
     {
-        $driver = $this->getCacheDriver();
-        return new Cache($this, $driver);
+        return new Pool($this->getCacheDriver());
     }
 
     /**

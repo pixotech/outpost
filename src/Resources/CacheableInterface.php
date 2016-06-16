@@ -1,6 +1,6 @@
 <?php
 
-namespace Outpost\Cache;
+namespace Outpost\Resources;
 
 interface CacheableInterface {
   public function getCacheKey();
