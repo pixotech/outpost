@@ -81,7 +81,8 @@ body {
     color: #060606;
     line-height: 1.35em;
     font-size: 1.35em;
-    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+        "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 }
 pre {
     background-color: #e6e6e6;
