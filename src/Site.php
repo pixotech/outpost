@@ -56,7 +56,7 @@ class Site implements SiteInterface, \ArrayAccess
      */
     public function addRoute($method, $path, callable $handler, $name = null)
     {
-        $route = $name ? [$path, $name] : $name;
+        $route = $name ? [$path, $name] : $path;
         $this->getRouter()->addRoute($method, $route, new Response($handler));
     }
 
