@@ -164,10 +164,10 @@ class Site implements SiteInterface, \ArrayAccess
      */
     public function recover(\Exception $error)
     {
+        header("HTTP/1.1 500 Internal Server Error");
         try {
             print new HelpPage($error);
         } catch (\Exception $e) {
-            header("HTTP/1.1 500 Internal Server Error");
             print $e->getMessage();
         }
     }
