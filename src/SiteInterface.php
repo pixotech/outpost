@@ -59,6 +59,13 @@ interface SiteInterface
     public function log($message, $level = null);
 
     /**
+     * @param string $className
+     * @param array $variables
+     * @return mixed
+     */
+    public function make($className, array $variables);
+
+    /**
      * @param \Exception $error
      */
     public function recover(\Exception $error);

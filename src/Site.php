@@ -10,6 +10,7 @@
 namespace Outpost;
 
 use Monolog\Logger;
+use Outpost\Content\Factory;
 use Outpost\Resources\CacheableInterface;
 use Outpost\Recovery\HelpPage;
 use Outpost\Routing\Response;
@@ -26,6 +27,11 @@ class Site implements SiteInterface, \ArrayAccess
      * @var Pool
      */
     protected $cache;
+
+    /**
+     * @var Factory
+     */
+    protected $contentFactory;
 
     /**
      * @var Logger
@@ -98,6 +104,12 @@ class Site implements SiteInterface, \ArrayAccess
         return $this->cache;
     }
 
+    public function getContentFactory()
+    {
+        if (!isset($this->contentFactory)) $this->contentFactory = $this->makeContentFactory();
+        return $this->contentFactory;
+    }
+
     public function getLog()
     {
         if (!isset($this->log)) $this->log = $this->makeLog();
@@ -117,6 +129,11 @@ class Site implements SiteInterface, \ArrayAccess
     {
         if (!isset($level)) $level = LogLevel::INFO;
         $this->getLog()->log($level, $message);
+    }
+
+    public function make($className, array $variables)
+    {
+        return $this->getContentFactory()->create($className, $variables);
     }
 
     public function offsetExists($urlName)
@@ -221,6 +238,11 @@ class Site implements SiteInterface, \ArrayAccess
     protected function makeCache()
     {
         return new Pool($this->getCacheDriver());
+    }
+
+    protected function makeContentFactory()
+    {
+        return new Factory();
     }
 
     /**
