@@ -18,11 +18,13 @@ class HelpPage
 
     public static function forException(\Exception $e)
     {
+        $exceptionClass = get_class($e);
+        $message = $e->getMessage() ?: '<i>No message</i>';
         return <<<HELP
 
 <p>An exception was thrown:</p>
 
-<div class="output">{$e->getMessage()}</div>
+<div class="output"><b>{$exceptionClass}</b>: {$message}</div>
 
 <p>The exception was thrown on line {$e->getLine()} of <code>{$e->getFile()}</code>.</p>
 
