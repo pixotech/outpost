@@ -10,18 +10,17 @@
 namespace Outpost;
 
 use Monolog\Logger;
-use Outpost\Content\Factory;
+use Outpost\Content\Factory as ContentFactory;
 use Outpost\Resources\CacheableInterface;
 use Outpost\Recovery\HelpPage;
-use Outpost\Routing\Response;
-use Phroute\Phroute\Dispatcher;
-use Phroute\Phroute\RouteCollector;
+use Outpost\Routing\Router;
+use Outpost\Routing\RouterInterface;
 use Psr\Log\LogLevel;
 use Stash\Driver\Ephemeral;
 use Stash\Pool;
 use Symfony\Component\HttpFoundation\Request;
 
-class Site implements SiteInterface, \ArrayAccess
+class Site implements SiteInterface
 {
     /**
      * @var Pool
@@ -29,9 +28,9 @@ class Site implements SiteInterface, \ArrayAccess
     protected $cache;
 
     /**
-     * @var Factory
+     * @var ContentFactory
      */
-    protected $contentFactory;
+    protected $content;
 
     /**
      * @var Logger
@@ -39,7 +38,7 @@ class Site implements SiteInterface, \ArrayAccess
     protected $log;
 
     /**
-     * @var RouteCollector
+     * @var Routing\RouterInterface
      */
     protected $router;
 
@@ -52,18 +51,6 @@ class Site implements SiteInterface, \ArrayAccess
     public function __invoke(callable $resource)
     {
         return $this->get($resource);
-    }
-
-    /**
-     * @param string $method
-     * @param string $path
-     * @param callable $handler
-     * @param string $name
-     */
-    public function addRoute($method, $path, callable $handler, $name = null)
-    {
-        $route = $name ? [$path, $name] : $path;
-        $this->getRouter()->addRoute($method, $route, new Response($handler));
     }
 
     /**
@@ -104,12 +91,18 @@ class Site implements SiteInterface, \ArrayAccess
         return $this->cache;
     }
 
-    public function getContentFactory()
+    /**
+     * @return ContentFactory
+     */
+    public function getContent()
     {
-        if (!isset($this->contentFactory)) $this->contentFactory = $this->makeContentFactory();
-        return $this->contentFactory;
+        if (!isset($this->content)) $this->content = $this->makeContentFactory();
+        return $this->content;
     }
 
+    /**
+     * @return Logger
+     */
     public function getLog()
     {
         if (!isset($this->log)) $this->log = $this->makeLog();
@@ -117,7 +110,7 @@ class Site implements SiteInterface, \ArrayAccess
     }
 
     /**
-     * @return RouteCollector
+     * @return RouterInterface
      */
     public function getRouter()
     {
@@ -125,55 +118,31 @@ class Site implements SiteInterface, \ArrayAccess
         return $this->router;
     }
 
+    /**
+     * @param string $message
+     * @param string $level
+     */
     public function log($message, $level = null)
     {
         if (!isset($level)) $level = LogLevel::INFO;
         $this->getLog()->log($level, $message);
     }
 
+    /**
+     * @param string $className
+     * @param array $variables
+     * @return mixed
+     */
     public function make($className, array $variables)
     {
-        return $this->getContentFactory()->create($className, $variables);
-    }
-
-    public function offsetExists($urlName)
-    {
-        throw new \BadMethodCallException("Not supported");
-    }
-
-    public function offsetGet($urlName)
-    {
-        return null;
-    }
-
-    public function offsetSet($path, $responder)
-    {
-        $name = null;
-        if (is_array($responder) && !is_callable($responder)) {
-            $name = $path;
-            list($path, $responder) = each($responder);
-        }
-        if (!is_callable($responder)) {
-            throw new \InvalidArgumentException();
-        }
-        if ($pos = strpos($path, ' ')) {
-            $method = substr($path, 0, $pos);
-            $path = ltrim(substr($path, $pos));
-        } else {
-            $method = 'GET';
-        }
-        $this->addRoute($method, $path, $responder, $name);
-    }
-
-    public function offsetUnset($route)
-    {
-        throw new \BadMethodCallException("Not supported");
+        return $this->getContent()->create($className, $variables);
     }
 
     /**
      * @param \Exception $error
+     * @param Request $request
      */
-    public function recover(\Exception $error)
+    public function recover(\Exception $error, Request $request = null)
     {
         header("HTTP/1.1 500 Internal Server Error");
         try {
@@ -189,23 +158,11 @@ class Site implements SiteInterface, \ArrayAccess
     public function respond(Request $request)
     {
         try {
-            $this->log("Request received: " . $request->getPathInfo());
-            $dispatcher = new Dispatcher($this->getRouter()->getData());
-            $response = $dispatcher->dispatch($request->getMethod(), $request->getPathInfo());
-            call_user_func($response->getResponder(), $this, $request, $response->getParameters());
+            $this->logRequest($request);
+            call_user_func($this->getResponder($request), $this, $request);
         } catch (\Exception $error) {
-            $this->recover($error);
+            $this->recover($error, $request);
         }
-    }
-
-    /**
-     * @param string $name
-     * @param array $parameters
-     * @return string
-     */
-    public function getUrl($name, array $parameters = [])
-    {
-        return '/' . $this->getRouter()->route($name, $parameters);
     }
 
     /**
@@ -233,6 +190,23 @@ class Site implements SiteInterface, \ArrayAccess
     }
 
     /**
+     * @param Request $request
+     * @return callable
+     */
+    protected function getResponder(Request $request)
+    {
+        return $this->getRouter()->getResponder($request);
+    }
+
+    /**
+     * @param Request $request
+     */
+    protected function logRequest(Request $request)
+    {
+        $this->log("Request received: " . $request->getPathInfo());
+    }
+
+    /**
      * @return Pool
      */
     protected function makeCache()
@@ -240,9 +214,12 @@ class Site implements SiteInterface, \ArrayAccess
         return new Pool($this->getCacheDriver());
     }
 
+    /**
+     * @return ContentFactory
+     */
     protected function makeContentFactory()
     {
-        return new Factory();
+        return new ContentFactory();
     }
 
     /**
@@ -254,10 +231,10 @@ class Site implements SiteInterface, \ArrayAccess
     }
 
     /**
-     * @return RouteCollector
+     * @return Router
      */
     protected function makeRouter()
     {
-        return new RouteCollector();
+        return new Router();
     }
 }

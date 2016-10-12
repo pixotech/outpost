@@ -2,6 +2,6 @@
 
 namespace Outpost\Routing;
 
-interface ResponseInterface {
+interface RouteInterface {
 
 }

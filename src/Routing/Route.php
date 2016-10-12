@@ -2,7 +2,7 @@
 
 namespace Outpost\Routing;
 
-class Response implements ResponseInterface
+class Route implements RouteInterface
 {
     protected $responder;
 

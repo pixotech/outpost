@@ -15,15 +15,6 @@ use Symfony\Component\HttpFoundation\Request;
 
 interface SiteInterface
 {
-
-    /**
-     * @param string $method
-     * @param string $path
-     * @param callable $handler
-     * @param string $name
-     */
-    public function addRoute($method, $path, callable $handler, $name = null);
-
     /**
      * @param callable $resource
      * @return mixed
@@ -41,16 +32,9 @@ interface SiteInterface
     public function getLog();
 
     /**
-     * @return \Phroute\Phroute\RouteCollector
+     * @return Routing\RouterInterface
      */
     public function getRouter();
-
-    /**
-     * @param string $name
-     * @param array $parameters
-     * @return string
-     */
-    public function getUrl($name, array $parameters = []);
 
     /**
      * @param string $message
