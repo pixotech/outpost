@@ -172,13 +172,12 @@ class Site implements SiteInterface
 
     /**
      * @param \Exception $error
-     * @param Request $request
+     * @return Response
      */
-    public function recover(\Exception $error, Request $request = null)
+    public function recover(\Exception $error)
     {
         $this->logException($error);
-        $this->printHelpPage($error, $request);
-        return null;
+        return $this->makeHelpResponse($error);
     }
 
     /**
@@ -190,7 +189,7 @@ class Site implements SiteInterface
             $this->logRequest($request);
             $response = call_user_func($this->getResponder($request), $this, $request);
         } catch (\Exception $error) {
-            $response = $this->recover($error, $request);
+            $response = $this->recover($error);
         }
         if ($response instanceof Response) {
             $response->prepare($request);
@@ -265,6 +264,21 @@ class Site implements SiteInterface
     }
 
     /**
+     * @param \Exception $error
+     * @param int $status
+     * @return Response
+     */
+    protected function makeHelpResponse(\Exception $error, $status = Response::HTTP_INTERNAL_SERVER_ERROR)
+    {
+        try {
+            $content = (string)new HelpPage($error);
+        } catch (\Exception $e) {
+            $content = $e->getMessage();
+        }
+        return new Response($content, $status);
+    }
+
+    /**
      * @return Logger
      */
     protected function makeLog()
@@ -278,19 +292,5 @@ class Site implements SiteInterface
     protected function makeRouter()
     {
         return new Router();
-    }
-
-    /**
-     * @param \Exception $error
-     * @param Request $request
-     */
-    protected function printHelpPage(\Exception $error, Request $request)
-    {
-        try {
-            $this->sendStatus(Response::HTTP_INTERNAL_SERVER_ERROR);
-            print new HelpPage($error, $request);
-        } catch (\Exception $e) {
-            print $e->getMessage();
-        }
     }
 }

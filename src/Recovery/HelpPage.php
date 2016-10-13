@@ -9,8 +9,6 @@
 
 namespace Outpost\Recovery;
 
-use Outpost\SiteInterface;
-
 class HelpPage
 {
 
@@ -47,10 +45,9 @@ HELP;
         return sprintf("%s (%s, line %d)", $e->getMessage(), $e->getFile(), $e->getLine());
     }
 
-    public function __construct(\Exception $exception, SiteInterface $site = null)
+    public function __construct(\Exception $exception)
     {
         $this->exception = $exception;
-        if (isset($site)) $this->site = $site;
     }
 
     public function __toString()
