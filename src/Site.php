@@ -270,7 +270,7 @@ class Site implements SiteInterface, \ArrayAccess
      * @param array $variables
      * @return string
      */
-    public function render($template, $variables = [])
+    public function render($template, array $variables = [])
     {
         return $this->getTwig()->render($template, $variables);
     }

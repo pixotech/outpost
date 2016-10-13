@@ -69,7 +69,7 @@ interface SiteInterface
      * @param array $variables
      * @return string
      */
-    public function render($template, $variables = []);
+    public function render($template, array $variables = []);
 
     /**
      * @param Request $request
