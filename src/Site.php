@@ -187,7 +187,11 @@ class Site implements SiteInterface
     {
         try {
             $this->logRequest($request);
-            call_user_func($this->getResponder($request), $this, $request);
+            $response = call_user_func($this->getResponder($request), $this, $request);
+            if ($response instanceof Response) {
+                $response->prepare($request);
+                $response->send();
+            }
         } catch (\Exception $error) {
             $this->recover($error, $request);
         }
