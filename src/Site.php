@@ -49,26 +49,6 @@ class Site implements SiteInterface, \ArrayAccess
     protected $twig;
 
     /**
-     * @param int $code
-     * @param string|null $message
-     * @return string
-     */
-    public static function makeHttpStatusHeader($code, $message = null)
-    {
-        if (!isset($message)) $message = static::makeHttpStatusMessage($code);
-        return sprintf("HTTP/1.1 %s %s", $code, $message);
-    }
-
-    /**
-     * @param int $code
-     * @return string
-     */
-    public static function makeHttpStatusMessage($code)
-    {
-        return isset(Response::$statusTexts[$code]) ? Response::$statusTexts[$code] : '';
-    }
-
-    /**
      * Shorthand for Site::get()
      *
      * @param callable $resource
@@ -290,15 +270,6 @@ class Site implements SiteInterface, \ArrayAccess
             $response->prepare($request);
             $response->send();
         }
-    }
-
-    /**
-     * @param int $code
-     * @param string|null $message
-     */
-    public function sendStatus($code, $message = null)
-    {
-        header(static::makeHttpStatusHeader($code, $message));
     }
 
     /**
