@@ -35,6 +35,14 @@ class Router implements RouterInterface
     }
 
     /**
+     * @return RouteCollector
+     */
+    public function getRouter()
+    {
+        return $this->router;
+    }
+
+    /**
      * @param string $method
      * @param string $path
      * @param callable $handler
@@ -44,13 +52,5 @@ class Router implements RouterInterface
     {
         $route = $name ? [$path, $name] : $path;
         $this->getRouter()->addRoute($method, $route, new Route($handler));
-    }
-
-    /**
-     * @return RouteCollector
-     */
-    protected function getRouter()
-    {
-        return $this->router;
     }
 }

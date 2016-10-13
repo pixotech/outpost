@@ -27,6 +27,11 @@ interface SiteInterface
     public function getCache();
 
     /**
+     * @return Content\Factory
+     */
+    public function getContent();
+
+    /**
      * @return LoggerInterface
      */
     public function getLog();
@@ -35,6 +40,11 @@ interface SiteInterface
      * @return Routing\RouterInterface
      */
     public function getRouter();
+
+    /**
+     * @return \Twig_Environment
+     */
+    public function getTwig();
 
     /**
      * @param string $message
@@ -53,6 +63,13 @@ interface SiteInterface
      * @param \Exception $error
      */
     public function recover(\Exception $error);
+
+    /**
+     * @param string $template
+     * @param array $variables
+     * @return string
+     */
+    public function render($template, $variables = []);
 
     /**
      * @param Request $request

@@ -10,8 +10,6 @@ Outpost is a lightweight web framework, designed for [decoupled][decoupled] webs
 
 ### What Outpost Doesn't Do
 
-**Templates.** Outpost provides no default templating engine.
-
 **HTTP.** Outpost doesn't provide a client for fetching external resources.
 
 ## Quickstart

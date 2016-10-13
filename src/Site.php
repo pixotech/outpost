@@ -21,7 +21,7 @@ use Stash\Pool;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class Site implements SiteInterface
+class Site implements SiteInterface, \ArrayAccess
 {
     /**
      * @var Pool
@@ -42,6 +42,11 @@ class Site implements SiteInterface
      * @var Routing\RouterInterface
      */
     protected $router;
+
+    /**
+     * @var \Twig_Environment
+     */
+    protected $twig;
 
     /**
      * @param int $code
@@ -140,6 +145,31 @@ class Site implements SiteInterface
     }
 
     /**
+     * @return \Twig_Environment
+     */
+    public function getTwig()
+    {
+        if (!isset($this->twig)) $this->twig = $this->makeTwigParser();
+        return $this->twig;
+    }
+
+    /**
+     * @deprecated
+     * @param string $name
+     * @param array $parameters
+     * @return string
+     */
+    public function getUrl($name, array $parameters = [])
+    {
+        user_error("URL generation is deprecated", E_USER_DEPRECATED);
+        $router = $this->getRouter();
+        if (!($router instanceof Router)) {
+            throw new \Exception("Routing shortcuts are only allowed with Phroute routing");
+        }
+        return '/' . $router->getRouter()->route($name, $parameters);
+    }
+
+    /**
      * @param string $message
      * @param string $level
      */
@@ -171,6 +201,61 @@ class Site implements SiteInterface
     }
 
     /**
+     * @deprecated
+     */
+    public function offsetExists($key)
+    {
+        throw new \BadMethodCallException("Not supported");
+    }
+
+    /**
+     * @deprecated
+     */
+    public function offsetGet($key)
+    {
+        user_error("Deprecated", E_USER_DEPRECATED);
+        return null;
+    }
+
+    /**
+     * @deprecated
+     * @param string $path
+     * @param mixed $responder
+     */
+    public function offsetSet($path, $responder)
+    {
+        user_error("Deprecated: Use Router::route() instead", E_USER_DEPRECATED);
+        $router = $this->getRouter();
+        if (!($router instanceof Router)) {
+            throw new \Exception("Routing shortcuts are only allowed with Phroute routing");
+        }
+        $name = null;
+        if (is_array($responder) && !is_callable($responder)) {
+            $name = $path;
+            list($path, $responder) = each($responder);
+        }
+        if (!is_callable($responder)) {
+            throw new \InvalidArgumentException();
+        }
+        if ($pos = strpos($path, ' ')) {
+            $method = substr($path, 0, $pos);
+            $path = ltrim(substr($path, $pos));
+        } else {
+            $method = 'GET';
+        }
+        $router->route($method, $path, $responder, $name);
+
+    }
+
+    /**
+     * @deprecated
+     */
+    public function offsetUnset($key)
+    {
+        throw new \BadMethodCallException("Not supported");
+    }
+
+    /**
      * @param \Exception $error
      * @return Response
      */
@@ -178,6 +263,16 @@ class Site implements SiteInterface
     {
         $this->logException($error);
         return $this->makeHelpResponse($error);
+    }
+
+    /**
+     * @param string $template
+     * @param array $variables
+     * @return string
+     */
+    public function render($template, $variables = [])
+    {
+        return $this->getTwig()->render($template, $variables);
     }
 
     /**
@@ -240,6 +335,22 @@ class Site implements SiteInterface
     }
 
     /**
+     * @return array
+     */
+    protected function getTwigExtensions()
+    {
+        return [];
+    }
+
+    /**
+     * @return array
+     */
+    protected function getTwigOptions()
+    {
+        return [];
+    }
+
+    /**
      * @param Request $request
      */
     protected function logRequest(Request $request)
@@ -292,5 +403,25 @@ class Site implements SiteInterface
     protected function makeRouter()
     {
         return new Router();
+    }
+
+    /**
+     * @return \Twig_LoaderInterface
+     */
+    protected function makeTwigLoader()
+    {
+        return new \Twig_Loader_Array([]);
+    }
+
+    /**
+     * @return \Twig_Environment
+     */
+    protected function makeTwigParser()
+    {
+        $twig = new \Twig_Environment($this->makeTwigLoader(), $this->getTwigOptions());
+        foreach ($this->getTwigExtensions() as $extension) {
+            $twig->addExtension($extension);
+        }
+        return $twig;
     }
 }
