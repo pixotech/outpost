@@ -337,14 +337,6 @@ class Site implements SiteInterface, \ArrayAccess
     /**
      * @return array
      */
-    protected function getTwigExtensions()
-    {
-        return [];
-    }
-
-    /**
-     * @return array
-     */
     protected function getTwigOptions()
     {
         return [];
@@ -418,10 +410,6 @@ class Site implements SiteInterface, \ArrayAccess
      */
     protected function makeTwigParser()
     {
-        $twig = new \Twig_Environment($this->makeTwigLoader(), $this->getTwigOptions());
-        foreach ($this->getTwigExtensions() as $extension) {
-            $twig->addExtension($extension);
-        }
-        return $twig;
+        return new \Twig_Environment($this->makeTwigLoader(), $this->getTwigOptions());
     }
 }
