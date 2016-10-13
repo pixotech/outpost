@@ -19,6 +19,7 @@ use Psr\Log\LogLevel;
 use Stash\Driver\Ephemeral;
 use Stash\Pool;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class Site implements SiteInterface
 {
@@ -41,6 +42,26 @@ class Site implements SiteInterface
      * @var Routing\RouterInterface
      */
     protected $router;
+
+    /**
+     * @param int $code
+     * @param string|null $message
+     * @return string
+     */
+    public static function makeHttpStatusHeader($code, $message = null)
+    {
+        if (!isset($message)) $message = static::makeHttpStatusMessage($code);
+        return sprintf("HTTP/1.1 %s %s", $code, $message);
+    }
+
+    /**
+     * @param int $code
+     * @return string
+     */
+    public static function makeHttpStatusMessage($code)
+    {
+        return isset(Response::$statusTexts[$code]) ? Response::$statusTexts[$code] : '';
+    }
 
     /**
      * Shorthand for Site::get()
@@ -129,6 +150,17 @@ class Site implements SiteInterface
     }
 
     /**
+     * @param \Exception $e
+     * @param string $level
+     */
+    public function logException(\Exception $e, $level = LogLevel::ERROR)
+    {
+        $eClass = get_class($e);
+        $message = sprintf("%s: %s (%s, line %d", $eClass, $e->getMessage(), $e->getFile(), $e->getLine());
+        $this->log($message, $level);
+    }
+
+    /**
      * @param string $className
      * @param array $variables
      * @return mixed
@@ -144,12 +176,8 @@ class Site implements SiteInterface
      */
     public function recover(\Exception $error, Request $request = null)
     {
-        header("HTTP/1.1 500 Internal Server Error");
-        try {
-            print new HelpPage($error);
-        } catch (\Exception $e) {
-            print $e->getMessage();
-        }
+        $this->logException($error);
+        $this->printHelpPage($error, $request);
     }
 
     /**
@@ -163,6 +191,15 @@ class Site implements SiteInterface
         } catch (\Exception $error) {
             $this->recover($error, $request);
         }
+    }
+
+    /**
+     * @param int $code
+     * @param string|null $message
+     */
+    public function sendStatus($code, $message = null)
+    {
+        header(static::makeHttpStatusHeader($code, $message));
     }
 
     /**
@@ -236,5 +273,19 @@ class Site implements SiteInterface
     protected function makeRouter()
     {
         return new Router();
+    }
+
+    /**
+     * @param \Exception $error
+     * @param Request $request
+     */
+    protected function printHelpPage(\Exception $error, Request $request)
+    {
+        try {
+            $this->sendStatus(Response::HTTP_INTERNAL_SERVER_ERROR);
+            print new HelpPage($error, $request);
+        } catch (\Exception $e) {
+            print $e->getMessage();
+        }
     }
 }
