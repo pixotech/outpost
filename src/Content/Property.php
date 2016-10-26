@@ -12,9 +12,9 @@ class Property implements PropertyInterface
     protected $callback;
 
     /**
-     * @var string
+     * @var \ReflectionProperty
      */
-    protected $name;
+    protected $property;
 
     /**
      * @var string
@@ -23,7 +23,7 @@ class Property implements PropertyInterface
 
     public function __construct(\ReflectionProperty $property)
     {
-        $this->name = $property->getName();
+        $this->property = $property;
         if ($comment = $property->getDocComment()) $this->parseDocComment($comment);
         $this->validate();
     }
@@ -54,7 +54,7 @@ class Property implements PropertyInterface
      */
     public function getName()
     {
-        return $this->name;
+        return $this->property->getName();
     }
 
     /**
@@ -81,6 +81,26 @@ class Property implements PropertyInterface
         return !empty($this->variable);
     }
 
+    protected function normalizeCallback($callback)
+    {
+        if (is_string($callback)) {
+            if (false !== strpos($callback, '::')) {
+                list($className, $method) = explode('::', $callback, 2);
+                if (empty($className) || $className == 'self') {
+                    $className = $this->property->getDeclaringClass();
+                }
+                $callback = [$className, $method];
+            }
+        }
+        return $callback;
+    }
+
+    protected function normalizeVariable($var)
+    {
+        if (empty($var)) $var = $this->getName();
+        return $var;
+    }
+
     protected function parseDocComment($str)
     {
         $parser = DocBlockFactory::createInstance();
@@ -88,10 +108,10 @@ class Property implements PropertyInterface
         foreach ($doc->getTags() as $tag) {
             switch ($tag->getName()) {
                 case 'outpost\content\callback':
-                    $this->callback = (string)$tag;
+                    $this->callback = $this->normalizeCallback((string)$tag);
                     break;
                 case 'outpost\content\variable':
-                    $this->variable = (string)$tag;
+                    $this->variable = $this->normalizeVariable((string)$tag);
                     break;
             }
         }
