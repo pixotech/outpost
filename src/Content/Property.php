@@ -87,7 +87,7 @@ class Property implements PropertyInterface
             if (false !== strpos($callback, '::')) {
                 list($className, $method) = explode('::', $callback, 2);
                 if (empty($className) || $className == 'self') {
-                    $className = $this->property->getDeclaringClass();
+                    $className = $this->property->class;
                 }
                 $callback = [$className, $method];
             }
