@@ -41,7 +41,7 @@ class Excerpt {
       }
     }
     if (!empty($excerpt)) {
-      $str  = '<p>' . $this->file . ', line ' . $this->line . '</p>';
+      $str  = '<p class="file">' . $this->file . ', line ' . $this->line . '</p>';
       $str .= '<div class="code">' . implode('', $excerpt) . '</div>';
       return $str;
     }
