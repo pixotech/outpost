@@ -14,7 +14,7 @@ class ContentClassTest extends \PHPUnit_Framework_TestCase
     public function testMakeContentClass()
     {
         $contentClass = new ContentClass(__CLASS__);
-        $this->assertCount(1, $contentClass->getContentProperties());
+        $this->assertCount(1, $contentClass->getProperties());
     }
 
     public function testCreateInstance()

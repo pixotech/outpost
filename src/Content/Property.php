@@ -2,6 +2,7 @@
 
 namespace Outpost\Content;
 
+use phpDocumentor\Reflection\DocBlock\Tags\Var_;
 use phpDocumentor\Reflection\DocBlockFactory;
 
 class Property implements PropertyInterface
@@ -12,9 +13,29 @@ class Property implements PropertyInterface
     protected $callback;
 
     /**
+     * @var string
+     */
+    protected $description;
+
+    /**
+     * @var array
+     */
+    protected $definition = [];
+
+    /**
      * @var \ReflectionProperty
      */
-    protected $property;
+    protected $reflection;
+
+    /**
+     * @var string
+     */
+    protected $summary;
+
+    /**
+     * @var string
+     */
+    protected $type;
 
     /**
      * @var string
@@ -23,7 +44,7 @@ class Property implements PropertyInterface
 
     public function __construct(\ReflectionProperty $property)
     {
-        $this->property = $property;
+        $this->reflection = $property;
         if ($comment = $property->getDocComment()) $this->parseDocComment($comment);
         $this->validate();
     }
@@ -52,9 +73,33 @@ class Property implements PropertyInterface
     /**
      * @return string
      */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * @return string
+     */
     public function getName()
     {
-        return $this->property->getName();
+        return $this->reflection->getName();
+    }
+
+    /**
+     * @return string
+     */
+    public function getSummary()
+    {
+        return $this->summary;
+    }
+
+    /**
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
     }
 
     /**
@@ -87,7 +132,7 @@ class Property implements PropertyInterface
             if (false !== strpos($callback, '::')) {
                 list($className, $method) = explode('::', $callback, 2);
                 if (empty($className) || $className == 'self') {
-                    $className = $this->property->class;
+                    $className = $this->reflection->class;
                 }
                 $callback = [$className, $method];
             }
@@ -105,6 +150,8 @@ class Property implements PropertyInterface
     {
         $parser = DocBlockFactory::createInstance();
         $doc = $parser->create($str);
+        $this->summary = (string)$doc->getSummary();
+        $this->description = (string)$doc->getDescription();
         foreach ($doc->getTags() as $tag) {
             switch ($tag->getName()) {
                 case 'outpost\content\callback':
@@ -113,6 +160,15 @@ class Property implements PropertyInterface
                 case 'outpost\content\variable':
                     $this->variable = $this->normalizeVariable((string)$tag);
                     break;
+                case 'outpost\json':
+                    $json = (string)$tag;
+                    if ($json && (null !== $parsed = json_decode($json, true))) {
+                        $this->definition = $parsed;
+                    }
+                    break;
+                case 'var':
+                    /** @var Var_ $tag */
+                    $this->type = (string)$tag->getType();
             }
         }
     }

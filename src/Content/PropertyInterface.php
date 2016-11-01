@@ -17,5 +17,10 @@ interface PropertyInterface
     /**
      * @return string
      */
+    public function getType();
+
+    /**
+     * @return string
+     */
     public function getVariable();
 }

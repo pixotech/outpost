@@ -10,7 +10,7 @@
 namespace Outpost;
 
 use Monolog\Logger;
-use Outpost\Content\Factory as ContentFactory;
+use Outpost\Content\Factory\Factory as ContentFactory;
 use Outpost\Resources\CacheableInterface;
 use Outpost\Recovery\HelpPage;
 use Outpost\Routing\Router;

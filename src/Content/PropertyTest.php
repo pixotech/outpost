@@ -43,7 +43,8 @@ class PropertyTest extends \PHPUnit_Framework_TestCase
     public function testCallback()
     {
         $property = $this->makeProperty('propertyWithVariableAndCallback');
-        $this->assertEquals('Outpost\Content\PropertyTest::callbackMethod', $property->getCallback());
+        $callback = $property->getCallback();
+        $this->assertEquals(['Outpost\Content\PropertyTest', 'callbackMethod'], $callback);
     }
 
     public function testInvokePropertyWithVariable()

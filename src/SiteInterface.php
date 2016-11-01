@@ -27,7 +27,7 @@ interface SiteInterface
     public function getCache();
 
     /**
-     * @return Content\Factory
+     * @return \Outpost\Content\Factory\Factory
      */
     public function getContent();
 

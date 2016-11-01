@@ -1,6 +1,9 @@
 <?php
 
-namespace Outpost\Content;
+namespace Outpost\Content\Factory;
+
+use Outpost\Content\ContentClass;
+use Outpost\Content\Variables;
 
 class Factory implements FactoryInterface
 {
