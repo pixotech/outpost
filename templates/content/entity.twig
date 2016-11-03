@@ -23,7 +23,13 @@
             {% for property in entity.properties %}
                 <tr>
                     <td>{{ property.summary ?: property.name }}</td>
-                    <td>{{ property.type }}</td>
+                    <td>
+                        {% if property.object %}
+                            <a href="#">{{ property.entity }}</a>
+                        {% else %}
+                            {{ property.type }}
+                        {% endif %}
+                    </td>
                     <td>{{ property.required ? 'Yes' : 'No' }}</td>
                     <td>{{ property.description }}</td>
                 </tr>

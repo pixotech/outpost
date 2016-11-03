@@ -3,6 +3,7 @@
 namespace Outpost\Content\Documentor;
 
 use Outpost\Content\Reflection\FileReflection;
+use Outpost\Files\Directory;
 use Psr\Log\LoggerInterface;
 
 class Documentor implements DocumentorInterface
@@ -21,8 +22,7 @@ class Documentor implements DocumentorInterface
 
     public function __construct($directory, LoggerInterface $log = null)
     {
-        if (!is_dir($directory)) throw new \Exception("Not a directory: $directory");
-        $this->directory = $directory;
+        $this->directory = new Directory($directory);
         if (isset($log)) $this->log = $log;
         $this->findEntities();
         $this->makeTwigParser();
@@ -58,25 +58,9 @@ class Documentor implements DocumentorInterface
         }
     }
 
-    protected function getCodeFilenamePattern()
-    {
-        return '|\.php$|';
-    }
-
     protected function getCodeFiles()
     {
-        return iterator_to_array($this->getCodeFilesIterator());
-    }
-
-    protected function getCodeFilesIterator()
-    {
-        $files = new \RecursiveIteratorIterator($this->getRecursiveDirectoryIterator());
-        return new \RegexIterator($files, $this->getCodeFilenamePattern(), \RegexIterator::MATCH);
-    }
-
-    protected function getRecursiveDirectoryIterator()
-    {
-        return new \RecursiveDirectoryIterator($this->directory);
+        return $this->directory->getFilesWithExtension('php');
     }
 
     protected function makeTwigParser()

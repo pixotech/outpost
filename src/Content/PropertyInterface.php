@@ -15,6 +15,11 @@ interface PropertyInterface
     public function getName();
 
     /**
+     * @return |ReflectionProperty
+     */
+    public function getReflection();
+
+    /**
      * @return string
      */
     public function getType();

@@ -2,6 +2,7 @@
 
 namespace Outpost\Content;
 
+use Outpost\Reflection\Docblock;
 use phpDocumentor\Reflection\DocBlock\Tags\Var_;
 use phpDocumentor\Reflection\DocBlockFactory;
 
@@ -87,6 +88,14 @@ class Property implements PropertyInterface
     }
 
     /**
+     * @return \ReflectionProperty
+     */
+    public function getReflection()
+    {
+        return $this->reflection;
+    }
+
+    /**
      * @return string
      */
     public function getSummary()
@@ -148,28 +157,16 @@ class Property implements PropertyInterface
 
     protected function parseDocComment($str)
     {
-        $parser = DocBlockFactory::createInstance();
-        $doc = $parser->create($str);
-        $this->summary = (string)$doc->getSummary();
-        $this->description = (string)$doc->getDescription();
-        foreach ($doc->getTags() as $tag) {
-            switch ($tag->getName()) {
-                case 'outpost\content\callback':
-                    $this->callback = $this->normalizeCallback((string)$tag);
-                    break;
-                case 'outpost\content\variable':
-                    $this->variable = $this->normalizeVariable((string)$tag);
-                    break;
-                case 'outpost\json':
-                    $json = (string)$tag;
-                    if ($json && (null !== $parsed = json_decode($json, true))) {
-                        $this->definition = $parsed;
-                    }
-                    break;
-                case 'var':
-                    /** @var Var_ $tag */
-                    $this->type = (string)$tag->getType();
-            }
+        $docblock = new Docblock($str);
+        $this->summary = $docblock->getSummary();
+        $this->description = $docblock->getDescription();
+        $this->definition = $docblock->getDefinition();
+        $this->type = $docblock->getType();
+        if ($callback = $docblock->getCallback()) {
+            $this->callback = $this->normalizeCallback($callback);
+        }
+        if ($variable = $docblock->getVariable()) {
+            $this->variable = $this->normalizeVariable($variable);
         }
     }
 
