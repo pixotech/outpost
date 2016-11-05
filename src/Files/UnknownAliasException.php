@@ -1,6 +1,8 @@
 <?php
 
-namespace Outpost\Content\Reflection;
+namespace Outpost\Files;
+
+use OutOfBoundsException;
 
 class UnknownAliasException extends \OutOfBoundsException
 {

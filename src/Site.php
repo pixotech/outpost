@@ -10,7 +10,11 @@
 namespace Outpost;
 
 use Monolog\Logger;
+use Outpost\Content\Entity;
 use Outpost\Content\Factory\Factory as ContentFactory;
+use Outpost\Files\Directory;
+use Outpost\Files\TemplateFile;
+use Outpost\Reflection\ReflectionClass;
 use Outpost\Resources\CacheableInterface;
 use Outpost\Recovery\HelpPage;
 use Outpost\Routing\Router;
@@ -34,6 +38,16 @@ class Site implements SiteInterface, \ArrayAccess
     protected $content;
 
     /**
+     * @var ReflectionClass[]
+     */
+    protected $libraryClasses;
+
+    /**
+     * @var string
+     */
+    protected $libraryPath;
+
+    /**
      * @var Logger
      */
     protected $log;
@@ -42,6 +56,16 @@ class Site implements SiteInterface, \ArrayAccess
      * @var Routing\RouterInterface
      */
     protected $router;
+
+    /**
+     * @var TemplateFile[]
+     */
+    protected $templates;
+
+    /**
+     * @var string
+     */
+    protected $templatesPath;
 
     /**
      * @var \Twig_Environment
@@ -106,6 +130,33 @@ class Site implements SiteInterface, \ArrayAccess
         return $this->content;
     }
 
+    public function getEntities()
+    {
+        if (!isset($this->entities)) {
+            $this->entities = [];
+            $library = $this->getLibraryClasses();
+            $templates = $this->getTemplates();
+            foreach ($library as $className => $libraryClass) {
+                if ($libraryClass->hasTemplate() && isset($templates[$libraryClass->getTemplate()])) {
+                    $entity = new Entity($libraryClass, $templates[$libraryClass->getTemplate()]);
+                    $this->entities[$className] = $entity;
+                }
+            }
+        }
+        return $this->entities;
+    }
+
+    /**
+     * @return ReflectionClass[]
+     */
+    public function getLibraryClasses()
+    {
+        if (!isset($this->libraryClasses)) {
+            $this->libraryClasses = $this->getLibraryDirectory()->getLibraryClasses();
+        }
+        return $this->libraryClasses;
+    }
+
     /**
      * @return Logger
      */
@@ -122,6 +173,17 @@ class Site implements SiteInterface, \ArrayAccess
     {
         if (!isset($this->router)) $this->router = $this->makeRouter();
         return $this->router;
+    }
+
+    /**
+     * @return TemplateFile[]
+     */
+    public function getTemplates()
+    {
+        if (!isset($this->templates)) {
+            $this->templates = $this->getTemplatesDirectory()->getTemplateFiles();
+        }
+        return $this->templates;
     }
 
     /**
@@ -273,11 +335,35 @@ class Site implements SiteInterface, \ArrayAccess
     }
 
     /**
+     * @param string $path
+     */
+    public function setLibraryPath($path)
+    {
+        $this->libraryPath = $path;
+    }
+
+    /**
+     * @param string $path
+     */
+    public function setTemplatesPath($path)
+    {
+        $this->templatesPath = $path;
+    }
+
+    /**
      * @return \Stash\Interfaces\DriverInterface
      */
     protected function getCacheDriver()
     {
         return new Ephemeral();
+    }
+
+    /**
+     * @return Directory
+     */
+    protected function getLibraryDirectory()
+    {
+        return $this->libraryPath ? new Directory($this->libraryPath) : null;
     }
 
     /**
@@ -303,6 +389,14 @@ class Site implements SiteInterface, \ArrayAccess
     protected function getResponder(Request $request)
     {
         return $this->getRouter()->getResponder($request);
+    }
+
+    /**
+     * @return Directory
+     */
+    protected function getTemplatesDirectory()
+    {
+        return $this->templatesPath ? new Directory($this->templatesPath) : null;
     }
 
     /**

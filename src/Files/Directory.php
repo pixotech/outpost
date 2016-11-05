@@ -46,7 +46,18 @@ class Directory implements DirectoryInterface
 
     public function getTemplateFiles()
     {
-        return $this->getFilesWithExtension(TemplateFile::EXTENSION);
+        $files = [];
+        /** @var \SplFileInfo $file */
+        foreach ($this->getFilesWithExtensionIterator(TemplateFile::EXTENSION) as $path => $file) {
+            $root = substr($path, 0, strlen($this->path));
+            if ($root == $this->path) {
+                $path = substr($path, strlen($root) + 1);
+            } else {
+                $root = null;
+            }
+            $files[$path] = new TemplateFile($file, $path, $root);
+        }
+        return $files;
     }
 
     protected function getFilesWithExtensionIterator($extension)

@@ -1,10 +1,10 @@
 <?php
 
-namespace Outpost\Content;
+namespace Outpost\Content\Properties;
 
+use Outpost\Content\Variables;
 use Outpost\Reflection\Docblock;
-use phpDocumentor\Reflection\DocBlock\Tags\Var_;
-use phpDocumentor\Reflection\DocBlockFactory;
+use Outpost\Reflection\PropertyInterface as ReflectionPropertyInterface;
 
 class Property implements PropertyInterface
 {
@@ -24,7 +24,7 @@ class Property implements PropertyInterface
     protected $definition = [];
 
     /**
-     * @var \ReflectionProperty
+     * @var ReflectionPropertyInterface
      */
     protected $reflection;
 
@@ -43,11 +43,29 @@ class Property implements PropertyInterface
      */
     protected $variable;
 
-    public function __construct(\ReflectionProperty $property)
+    public static function cast(ReflectionPropertyInterface $property)
+    {
+        switch ($property->getType()) {
+            case 'array':
+                return new ArrayProperty($property);
+            case 'bool':
+            case 'boolean':
+                return new BooleanProperty($property);
+            case 'float':
+                return new FloatProperty($property);
+            case 'int':
+            case 'integer':
+                return new IntegerProperty($property);
+            case 'string':
+                return new StringProperty($property);
+            default:
+                return new Property($property);
+        }
+    }
+
+    public function __construct(ReflectionPropertyInterface $property)
     {
         $this->reflection = $property;
-        if ($comment = $property->getDocComment()) $this->parseDocComment($comment);
-        $this->validate();
     }
 
     public function __invoke(Variables $variables)
@@ -68,7 +86,7 @@ class Property implements PropertyInterface
      */
     public function getCallback()
     {
-        return $this->callback;
+        return $this->reflection->getCallback();
     }
 
     /**
@@ -116,7 +134,7 @@ class Property implements PropertyInterface
      */
     public function getVariable()
     {
-        return $this->variable;
+        return $this->reflection->getVariable();
     }
 
     /**
@@ -124,7 +142,7 @@ class Property implements PropertyInterface
      */
     public function hasCallback()
     {
-        return !empty($this->callback);
+        return (bool)$this->getCallback();
     }
 
     /**
@@ -132,7 +150,23 @@ class Property implements PropertyInterface
      */
     public function hasVariable()
     {
-        return !empty($this->variable);
+        return (bool)$this->getVariable();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isObject()
+    {
+        return substr($this->getType(), 0, 1) == '\\';
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRequired()
+    {
+        return false;
     }
 
     protected function normalizeCallback($callback)
@@ -153,27 +187,5 @@ class Property implements PropertyInterface
     {
         if (empty($var)) $var = $this->getName();
         return $var;
-    }
-
-    protected function parseDocComment($str)
-    {
-        $docblock = new Docblock($str);
-        $this->summary = $docblock->getSummary();
-        $this->description = $docblock->getDescription();
-        $this->definition = $docblock->getDefinition();
-        $this->type = $docblock->getType();
-        if ($callback = $docblock->getCallback()) {
-            $this->callback = $this->normalizeCallback($callback);
-        }
-        if ($variable = $docblock->getVariable()) {
-            $this->variable = $this->normalizeVariable($variable);
-        }
-    }
-
-    protected function validate()
-    {
-        if (!$this->hasCallback() && !$this->hasVariable()) {
-            throw new \DomainException("Invalid content property");
-        }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Outpost\Files;
 
-use Outpost\Content\Reflection\UnknownAliasException;
+use Outpost\Files\UnknownAliasException;
 use Outpost\Reflection\ReflectionClass;
 
 class SourceFile extends File implements SourceFileInterface

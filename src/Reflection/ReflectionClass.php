@@ -7,6 +7,8 @@ use Outpost\Files\SourceFile;
 
 class ReflectionClass implements ReflectionClassInterface
 {
+    protected $docblock;
+
     protected $file;
 
     protected $libraryClass;
@@ -16,6 +18,8 @@ class ReflectionClass implements ReflectionClassInterface
     protected $libraryPath;
 
     protected $libraryRoot;
+
+    protected $properties;
 
     protected $reflection;
 
@@ -31,12 +35,25 @@ class ReflectionClass implements ReflectionClassInterface
         if (isset($file)) {
             $this->file = $file;
         }
+        if ($docblock = $this->reflection->getDocComment()) {
+            $this->docblock = new Docblock($docblock);
+        }
         $this->findLibraryInformation();
     }
 
     public function __toString()
     {
         return $this->getName();
+    }
+
+    public function getDescription()
+    {
+        return $this->docblock ? $this->docblock->getDescription() : null;
+    }
+
+    public function getEndLine()
+    {
+        return $this->getReflection()->getEndLine();
     }
 
     public function getFile()
@@ -47,19 +64,55 @@ class ReflectionClass implements ReflectionClassInterface
         return $this->file;
     }
 
+    public function getFileName()
+    {
+        return $this->getReflection()->getFileName();
+    }
+
     public function getName()
     {
         return $this->getReflection()->getName();
     }
 
+    public function getProperties()
+    {
+        if (!isset($this->properties)) {
+            $this->properties = [];
+            foreach ($this->getReflection()->getProperties() as $prop) {
+                $this->properties[$prop->getName()] = new Property($prop);
+            }
+        }
+        return $this->properties;
+    }
+
+    public function getStartLine()
+    {
+        return $this->getReflection()->getStartLine();
+    }
+
+    public function getSummary()
+    {
+        return $this->docblock ? $this->docblock->getSummary() : null;
+    }
+
+    public function getTemplate()
+    {
+        return $this->docblock ? $this->docblock->getTemplate() : null;
+    }
+
+    public function hasTemplate()
+    {
+        return $this->docblock ? $this->docblock->hasTemplate() : false;
+    }
+
+    public function isEntityClass()
+    {
+        return $this->isLibraryClass();
+    }
+
     public function isLibraryClass()
     {
         return !empty($this->libraryRoot);
-    }
-
-    protected function getFileName()
-    {
-        return $this->getReflection()->getFileName();
     }
 
     protected function getNamespaceName()

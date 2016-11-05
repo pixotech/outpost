@@ -38,6 +38,16 @@ class Docblock implements DocblockInterface
     protected $summary;
 
     /**
+     * @var array
+     */
+    protected $tags;
+
+    /**
+     * @var string
+     */
+    protected $template;
+
+    /**
      * @var string
      */
     protected $type;
@@ -107,6 +117,14 @@ class Docblock implements DocblockInterface
     /**
      * @return string
      */
+    public function getTemplate()
+    {
+        return $this->template;
+    }
+
+    /**
+     * @return string
+     */
     public function getType()
     {
         return $this->type;
@@ -118,6 +136,14 @@ class Docblock implements DocblockInterface
     public function getVariable()
     {
         return $this->variable;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasTemplate()
+    {
+        return !empty($this->template);
     }
 
     protected function parse()
@@ -139,9 +165,15 @@ class Docblock implements DocblockInterface
                         $this->definition = $parsed;
                     }
                     break;
+                case 'outpost\template':
+                    $this->template = (string)$tag;
+                    break;
                 case 'var':
                     /** @var Var_ $tag */
                     $this->type = (string)$tag->getType();
+                    break;
+                default:
+                    $this->tags[$tag->getName()][] = (string)$tag;
             }
         }
     }

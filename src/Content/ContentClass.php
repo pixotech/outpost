@@ -2,6 +2,8 @@
 
 namespace Outpost\Content;
 
+use Outpost\Content\Properties\Property;
+use Outpost\Reflection\Property as ReflectionProperty;
 use phpDocumentor\Reflection\DocBlockFactory;
 
 class ContentClass implements ContentClassInterface
@@ -24,11 +26,6 @@ class ContentClass implements ContentClassInterface
         $this->reflection = new \ReflectionClass($className);
         if ($comment = $this->reflection->getDocComment()) $this->parseDocComment($comment);
         $this->findProperties();
-    }
-
-    public function __invoke(VariablesInterface $properties)
-    {
-        return $this->makeInstance($properties);
     }
 
     public function getDescription()
@@ -55,32 +52,11 @@ class ContentClass implements ContentClassInterface
     {
         foreach ($this->reflection->getProperties() as $property) {
             try {
-                $this->properties[] = new Property($property);
+                $this->properties[] = new Property(new ReflectionProperty($property));
             } catch (\DomainException $e) {
                 continue;
             }
         }
-    }
-
-    protected function makeInstance(VariablesInterface $variables)
-    {
-        $obj = $this->reflection->newInstanceWithoutConstructor();
-        foreach ($this->makeProperties($variables) as $name => $value) {
-            $property = $this->reflection->getProperty($name);
-            $property->setAccessible(true);
-            $property->setValue($obj, $value);
-        }
-        # todo: call object constructor
-        return $obj;
-    }
-
-    protected function makeProperties(VariablesInterface $variables)
-    {
-        $properties = [];
-        foreach ($this->properties as $property) {
-            $properties[$property->getName()] = call_user_func($property, $variables);
-        }
-        return $properties;
     }
 
     protected function parseDocComment($str)

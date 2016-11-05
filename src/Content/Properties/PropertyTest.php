@@ -1,6 +1,10 @@
 <?php
 
-namespace Outpost\Content;
+namespace Outpost\Content\Properties;
+
+use Outpost\Content\Variables;
+use PHPUnit_Framework_TestCase;
+use Outpost\Reflection\Property as ReflectionProperty;
 
 class PropertyTest extends \PHPUnit_Framework_TestCase
 {
@@ -13,14 +17,9 @@ class PropertyTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @outpost\content\variable varname
-     * @outpost\content\callback Outpost\Content\PropertyTest::callbackMethod
+     * @outpost\content\callback Outpost\Content\Properties\PropertyTest::callbackMethod
      */
     public $propertyWithVariableAndCallback;
-
-    /**
-     * This property doesn't define any content attributes
-     */
-    public $invalidProperty;
 
     public static function callbackMethod($var)
     {
@@ -43,7 +42,7 @@ class PropertyTest extends \PHPUnit_Framework_TestCase
     public function testCallback()
     {
         $property = $this->makeProperty('propertyWithVariableAndCallback');
-        $this->assertEquals(['Outpost\Content\PropertyTest', 'callbackMethod'], $property->getCallback());
+        $this->assertEquals(['Outpost\Content\Properties\PropertyTest', 'callbackMethod'], $property->getCallback());
     }
 
     public function testInvokePropertyWithVariable()
@@ -64,16 +63,8 @@ class PropertyTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(1, self::$callbackCount);
     }
 
-    /**
-     * @expectedException \DomainException
-     */
-    public function testInvalidProperty()
-    {
-        $this->makeProperty('invalidProperty');
-    }
-
     protected function makeProperty($name)
     {
-        return new Property(new \ReflectionProperty(__CLASS__, $name));
+        return new Property(new ReflectionProperty(new \ReflectionProperty(__CLASS__, $name)));
     }
 }

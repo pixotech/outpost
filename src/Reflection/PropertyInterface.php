@@ -1,6 +1,6 @@
 <?php
 
-namespace Outpost\Content;
+namespace Outpost\Reflection;
 
 interface PropertyInterface
 {
