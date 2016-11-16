@@ -3,77 +3,59 @@
 namespace Outpost\Content;
 
 use Outpost\Content\Properties\Property;
-use Outpost\Reflection\Property as ReflectionProperty;
-use phpDocumentor\Reflection\DocBlockFactory;
 
-class ContentClass implements ContentClassInterface
+class ContentClass extends \ReflectionClass implements ContentClassInterface
 {
-    protected $reflection;
-
-    protected $definition = [];
-
-    protected $description;
-
-    protected $summary;
-
     /**
      * @var Property[]
      */
-    protected $properties = [];
+    protected $contentProperties = [];
 
     public function __construct($className)
     {
-        $this->reflection = new \ReflectionClass($className);
-        if ($comment = $this->reflection->getDocComment()) $this->parseDocComment($comment);
-        $this->findProperties();
+        parent::__construct($className);
+        $this->findContentProperties();
     }
 
-    public function getDescription()
+    public function __invoke(VariablesInterface $properties)
     {
-        return $this->description;
+        return $this->makeContentInstance($properties);
     }
 
-    public function getProperties()
+    public function getContentProperties()
     {
-        return $this->properties;
+        return $this->contentProperties;
     }
 
-    public function getReflection()
+    protected function findContentProperties()
     {
-        return $this->reflection;
-    }
-
-    public function getSummary()
-    {
-        return $this->summary;
-    }
-
-    protected function findProperties()
-    {
-        foreach ($this->reflection->getProperties() as $property) {
+        foreach ($this->getProperties() as $property) {
             try {
-                $this->properties[] = new Property(new ReflectionProperty($property));
+                $this->contentProperties[] = new Property(new \Outpost\Reflection\Property($property));
             } catch (\DomainException $e) {
                 continue;
             }
         }
     }
 
-    protected function parseDocComment($str)
+    protected function makeContentInstance(VariablesInterface $variables)
     {
-        $parser = DocBlockFactory::createInstance();
-        $doc = $parser->create($str);
-        $this->summary = (string)$doc->getSummary();
-        $this->description = (string)$doc->getDescription();
-        foreach ($doc->getTags() as $tag) {
-            switch ($tag->getName()) {
-                case 'outpost\json':
-                    $json = (string)$tag;
-                    if ($json && (null !== $parsed = json_decode($json, true))) {
-                        $this->definition = $parsed;
-                    }
-                    break;
-            }
+        $obj = $this->newInstanceWithoutConstructor();
+        foreach ($this->makeProperties($variables) as $name => $value) {
+            $property = $this->getProperty($name);
+            $property->setAccessible(true);
+            $property->setValue($obj, $value);
         }
+        return $obj;
+    }
+
+    protected function makeProperties(VariablesInterface $variables)
+    {
+        $properties = [];
+        foreach ($this->contentProperties as $property)
+        {
+            $properties[$property->getName()] = call_user_func($property, $variables);
+        }
+        return $properties;
     }
 }

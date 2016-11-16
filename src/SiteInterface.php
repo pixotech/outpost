@@ -42,6 +42,11 @@ interface SiteInterface
     public function getRouter();
 
     /**
+     * @return \Outpost\Files\TemplateFile[]
+     */
+    public function getTemplates();
+
+    /**
      * @return \Twig_Environment
      */
     public function getTwig();
