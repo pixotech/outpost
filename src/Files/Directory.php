@@ -12,6 +12,9 @@ class Directory implements DirectoryInterface
         if (!is_dir($this->path)) {
             throw new \InvalidArgumentException("Not a directory: $this->path");
         }
+        if ($this->path != DIRECTORY_SEPARATOR) {
+            $this->path = rtrim($this->path, DIRECTORY_SEPARATOR);
+        }
     }
 
     public function getFilesWithExtension($extension)

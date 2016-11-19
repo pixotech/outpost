@@ -1,0 +1,54 @@
+{% extends "page.twig" %}
+
+{% block body %}
+
+    {% set path = template.templateName|split('/') %}
+
+    <div class="template-header">
+
+        {% if path|length > 1 %}
+            <p class="template__directory">{{ path[0:-1]|join('/') }}</p>
+        {% endif %}
+
+        <h1>{{ path|last }}</h1>
+
+    </div>
+
+    <div class="switcher">
+        <div class="view-switcher">
+
+            <ul class="switcher__view-switcher">
+                <li class="switcher__view-switcher-item switcher__view-switcher-item--active">
+                    <a class="switcher__view-switcher-link">Preview</a>
+                </li>
+                <li class="switcher__view-switcher-item">
+                    <a class="switcher__view-switcher-link">HTML</a>
+                </li>
+                <li class="switcher__view-switcher-item">
+                    <a class="switcher__view-switcher-link">Template</a>
+                </li>
+            </ul>
+
+        </div>
+        <div class="switcher__actions">
+
+            <p class="switcher__action"><a target="_blank" href="/_outpost/templates/preview?template={{ template.templateName|e("url") }}">Open in new window</a></p>
+
+            <p class="switcher__action"><a href="javascript:new pym.Parent('preview', '/_outpost/templates/preview?template={{ template.templateName|e("url") }}', {});">Refresh</a></p>
+
+        </div>
+    </div>
+
+
+    {% include "console/resizer.twig" with { breakpoints: [ 320, 480, 720, 1080 ] } %}
+
+    <div style="margin:0 auto;width:100%;max-width:100%">
+        <div id="preview"></div>
+    </div>
+    <script>
+        var pymParent = new pym.Parent('preview', "/_outpost/templates/preview?template={{ template.templateName|e("url") }}", {});
+    </script>
+
+    <pre>{{ template.contents }}</pre>
+
+{% endblock %}

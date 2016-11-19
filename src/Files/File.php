@@ -13,4 +13,14 @@ class File implements FileInterface
             throw new \InvalidArgumentException("Not a file: $this->path");
         }
     }
+
+    public function getContents()
+    {
+        return file_get_contents($this->path);
+    }
+
+    public function getTimeModified()
+    {
+        return filemtime($this->path);
+    }
 }
