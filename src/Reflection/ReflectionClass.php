@@ -85,6 +85,11 @@ class ReflectionClass implements ReflectionClassInterface
         return $this->properties;
     }
 
+    public function getSource()
+    {
+        return $this->getFile()->getExcerpt($this->getStartLine(), $this->getEndLine());
+    }
+
     public function getStartLine()
     {
         return $this->getReflection()->getStartLine();
@@ -100,9 +105,40 @@ class ReflectionClass implements ReflectionClassInterface
         return $this->docblock ? $this->docblock->getTemplate() : null;
     }
 
+    public function getTemplateVariables()
+    {
+        $vars = [];
+        foreach ($this->getReflection()->getProperties(\ReflectionProperty::IS_PUBLIC) as $prop) {
+            $vars[$prop->getName()] = ['type' => 'public property', 'prop' => $prop];
+        }
+        foreach ($this->getPublicGetterMethods() as $name => $method) {
+            if (isset($vars[$name])) continue;
+            $prop = ['type' => 'public getter', 'prop' => $method];
+            $prop['has_setter'] = $this->hasSetterMethod($name);
+            $prop['has_test'] = $this->hasTestMethod($name);
+            $vars[$name] = $prop;
+        }
+        return $vars;
+    }
+
+    public function hasGetterMethod($name)
+    {
+        return $this->hasPublicNonStaticMethod('get' . ucfirst($name));
+    }
+
+    public function hasSetterMethod($name)
+    {
+        return $this->hasPublicNonStaticMethod('set' . ucfirst($name));
+    }
+
     public function hasTemplate()
     {
         return $this->docblock ? $this->docblock->hasTemplate() : false;
+    }
+
+    public function hasTestMethod($name)
+    {
+        return $this->hasPublicNonStaticMethod('is' . ucfirst($name));
     }
 
     public function isEntityClass()
@@ -113,6 +149,23 @@ class ReflectionClass implements ReflectionClassInterface
     public function isLibraryClass()
     {
         return !empty($this->libraryRoot);
+    }
+
+    protected function getPublicMethods()
+    {
+        return $this->getReflection()->getMethods(\ReflectionMethod::IS_PUBLIC);
+    }
+
+    protected function getPublicGetterMethods()
+    {
+        $methods = [];
+        foreach ($this->getPublicMethods() as $method) {
+            $name = $method->getName();
+            if (strlen($name) > 3 && substr($name, 0, 3) == 'get') {
+                $methods[lcfirst(substr($name, 3))] = $method;
+            }
+        }
+        return $methods;
     }
 
     protected function getNamespaceName()
@@ -126,6 +179,13 @@ class ReflectionClass implements ReflectionClassInterface
     protected function getReflection()
     {
         return $this->reflection;
+    }
+
+    protected function hasPublicNonStaticMethod($name)
+    {
+        if (!$this->getReflection()->hasMethod($name)) return false;
+        $method = $this->getReflection()->getMethod($name);
+        return $method->isPublic() && !$method->isStatic();
     }
 
     private function findLibraryInformation()

@@ -84,7 +84,7 @@ class SourceFile extends File implements SourceFileInterface
                 $source[$lineNumber] = $line;
             }
         }
-        return implode("", $source);
+        return $source;
     }
 
     public function getNamespace()

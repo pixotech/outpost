@@ -1,0 +1,51 @@
+{% extends "page.twig" %}
+
+{% block body %}
+
+    <h1>{{ entity.summary ?: entity.name }}</h1>
+
+    <div>{{ entity.description }}</div>
+
+    <h2>Properties</h2>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Property</th>
+            <th>Type</th>
+            <th>Required?</th>
+            <th>Description</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for property in entity.properties %}
+            <tr>
+                <td>{{ property.summary ?: property.name }}</td>
+                <td>
+                    {% if property.object %}
+                        <a href="#">{{ property.entity }}</a>
+                    {% else %}
+                        {{ property.type }}
+                    {% endif %}
+                </td>
+                <td>{{ property.required ? 'Yes' : 'No' }}</td>
+                <td>{{ property.description }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Code</h2>
+
+    <p>{{ entity.fileName }}</p>
+
+    {% if entity.startLine == entity.endLine %}
+        <p>Line {{ entity.startLine }}</p>
+    {% else %}
+        <p>Lines {{ entity.startLine }} - {{ entity.endLine }}</p>
+    {% endif %}
+
+    <pre>{{ entity.source }}</pre>
+
+{% endblock %}
+

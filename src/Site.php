@@ -152,6 +152,9 @@ class Site implements SiteInterface, \ArrayAccess
     public function getLibraryClasses()
     {
         if (!isset($this->libraryClasses)) {
+            if (empty($this->libraryPath)) {
+                throw new \BadMethodCallException("Library path is not set");
+            }
             $this->libraryClasses = $this->getLibraryDirectory()->getLibraryClasses();
         }
         return $this->libraryClasses;
