@@ -2,6 +2,8 @@
 
 namespace Outpost\Console;
 
+use Outpost\Console\Responders\Templates\TemplateIndexResponder;
+use Outpost\Console\Responders\Templates\TemplatePreviewResponder;
 use Outpost\Files\Directory;
 use Outpost\Site;
 use Outpost\SiteInterface;
@@ -21,57 +23,32 @@ class ConsoleSite extends Site
         $this->site = $site;
     }
 
-    public function getTemplatePreview()
-    {
-        $templates = $this->site->getTemplates();
-        if (!empty($_GET['template'])) {
-            if (isset($templates[$_GET['template']])) {
-                $template = $templates[$_GET['template']];
-                $vars = [];
-                if ($template->hasFixture()) {
-                    $vars = $template->getFixture();
-                }
-                $preview = $this->site->render($template->getTemplateName(), $vars);
-                if (!empty($templates['_outpost/preview.twig'])) {
-                    $pym = $this->getPym();
-                    $script = $this->render("console/templates/preview-script.twig", ['pym' => $pym]);
-                    $preview = $this->site->render("_outpost/preview.twig", ['preview' => $preview, 'script' => $script]);
-                }
-                print $preview;
-                return;
-            }
-        }
-        header("HTTP/1.0 404 Not Found");
-        print "Not found";
-    }
-
-    public function getTemplatesIndex()
-    {
-        $templates = $this->site->getTemplates();
-        $vars = [
-            'stylesheet' => $this->getStylesheet(),
-            'script' => $this->getScript(),
-        ];
-        if (!empty($_GET['template'])) {
-            if (isset($templates[$_GET['template']])) {
-                $vars['template'] = $templates[$_GET['template']];
-                print $this->render("console/templates/template.twig", $vars);
-            } else {
-                header("HTTP/1.0 404 Not Found");
-                print "Not found";
-            }
-        } else {
-            $vars['templates'] = $templates;
-            print $this->render("console/templates/index.twig", $vars);
-        }
-    }
-
     /**
      * @return string
      */
     public function getPublicPath()
     {
         return $this->publicPath;
+    }
+
+    public function getPym()
+    {
+        return $this->getAssetContents('pym/pym.js');
+    }
+
+    public function getScript()
+    {
+        return $this->getJquery() . $this->getPym() . $this->getAssetContents('outpost.js');
+    }
+
+    public function getSite()
+    {
+        return $this->site;
+    }
+
+    public function getStylesheet()
+    {
+        return file_get_contents(__DIR__ . '/../../assets/outpost.css');
     }
 
     public function respond(Request $request)
@@ -115,19 +92,14 @@ class ConsoleSite extends Site
         $this->publicPath = $path;
     }
 
-    protected function getPym()
+    protected function getAssetContents($path)
     {
-        return file_get_contents(__DIR__ . '/../../assets/pym/pym.js');
+        return file_get_contents(__DIR__ . "/../../assets/{$path}");
     }
 
-    protected function getScript()
+    protected function getJquery()
     {
-        return $this->getPym();
-    }
-
-    protected function getStylesheet()
-    {
-        return file_get_contents(__DIR__ . '/../../assets/outpost.css');
+        return $this->getAssetContents('jquery/jquery.js');
     }
 
     protected function getTemplatesDirectory()
@@ -143,8 +115,8 @@ class ConsoleSite extends Site
     protected function makeRouter()
     {
         $router = parent::makeRouter();
-        $router->route('GET', '_outpost/templates', [$this, 'getTemplatesIndex']);
-        $router->route('GET', '_outpost/templates/preview', [$this, 'getTemplatePreview']);
+        $router->route('GET', '_outpost/templates', new TemplateIndexResponder());
+        $router->route('GET', '_outpost/templates/preview', new TemplatePreviewResponder());
         return $router;
     }
 

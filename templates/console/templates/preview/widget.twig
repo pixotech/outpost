@@ -1,0 +1,36 @@
+
+{% set breakpoints = [ 320, 480, 720, 1080, 1200 ] %}
+{% set breakpoints_sorted = breakpoints|sort|reverse %}
+{% set id = "preview" %}
+
+<div class="template-preview-widget">
+
+    <div class="resizer">
+        <div class="resizer__breakpoint{{ current ?: " resizer__breakpoint--current" }} resizer__breakpoint--full-width" style="width:100%;margin-left:-50%;z-index:0;" data-preview-id="{{ id }}" data-breakpoint-size="100%">
+            <div class="resizer__breakpoint-label">100%</div>
+        </div>
+        {% for breakpoint in breakpoints_sorted %}
+            <div id="{{ id }}_breakpoint_{{ loop.index }}" class="resizer__breakpoint{{ breakpoint == current ? " resizer__breakpoint--current" }}" style="width:{{ breakpoint }}px;margin-left:-{{ breakpoint/2 }}px;z-index:{{ loop.index }};" data-preview-id="{{ id }}" data-breakpoint-size="{{ breakpoint }}px">
+                <div class="resizer__breakpoint-label">{{ breakpoint }}px</div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="resizer__preview-container-outer">
+        <div class="resizer__preview-container" id="{{ id }}_container" style="margin:0 auto;width:{{ current ?: "100%" }};max-width:100%">
+            <div class="resizer__preview" id="{{ id }}"></div>
+        </div>
+    </div>
+
+    <style>
+        {% for breakpoint in breakpoints_sorted %}
+        #{{ id }}_breakpoint_{{ loop.index }} { display: none; }
+        @media (min-width: {{ breakpoint + 200 }}px) { #{{ id }}_breakpoint_{{ loop.index }} { display: block; } }
+        {% endfor %}
+    </style>
+
+    <script>
+        var pymParent = new pym.Parent('{{ id }}', "/_outpost/templates/preview?template={{ template.templateName|e("url") }}", {});
+    </script>
+
+</div>

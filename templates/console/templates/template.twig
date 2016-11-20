@@ -17,16 +17,9 @@
     <div class="switcher">
         <div class="view-switcher">
 
-            <ul class="switcher__view-switcher">
-                <li class="switcher__view-switcher-item switcher__view-switcher-item--active">
-                    <a class="switcher__view-switcher-link">Preview</a>
-                </li>
-                <li class="switcher__view-switcher-item">
-                    <a class="switcher__view-switcher-link">HTML</a>
-                </li>
-                <li class="switcher__view-switcher-item">
-                    <a class="switcher__view-switcher-link">Template</a>
-                </li>
+            <ul class="switcher__view-switcher" role="tablist">
+                <li id="template_preview_tab" class="switcher__view-switcher-item" aria-controls="template_preview" role="tab">Preview</li>
+                <li id="template_contents_tab" class="switcher__view-switcher-item" aria-controls="template_contents" role="tab">Template</li>
             </ul>
 
         </div>
@@ -39,16 +32,12 @@
         </div>
     </div>
 
-
-    {% include "console/resizer.twig" with { breakpoints: [ 320, 480, 720, 1080 ] } %}
-
-    <div style="margin:0 auto;width:100%;max-width:100%">
-        <div id="preview"></div>
+    <div id="template_preview" aria-labelledby="template_preview_tab" role="tabpanel">
+        {% include "console/templates/preview/widget.twig" %}
     </div>
-    <script>
-        var pymParent = new pym.Parent('preview', "/_outpost/templates/preview?template={{ template.templateName|e("url") }}", {});
-    </script>
 
-    <pre>{{ template.contents }}</pre>
+    <div id="template_contents" aria-labelledby="template_contents_tab" role="tabpanel">
+        <pre>{{ template.contents }}</pre>
+    </div>
 
 {% endblock %}
