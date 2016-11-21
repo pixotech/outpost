@@ -2,6 +2,8 @@
 
 namespace Outpost\Content;
 
+use Outpost\Content\Builders\VariableBuilder;
+
 class Variables implements VariablesInterface, \ArrayAccess, \Countable, \IteratorAggregate, \JsonSerializable
 {
     const DELIMITER_PATTERN = '#[/\.]#';
@@ -24,7 +26,7 @@ class Variables implements VariablesInterface, \ArrayAccess, \Countable, \Iterat
     {
         if (!is_array($value)) return false;
         $keys = array_keys($value);
-        return count($keys) == 1 && $keys[0] == '$ref';
+        return count($keys) == 1 && $keys[0] === '$ref';
     }
 
     public static function load($file)
@@ -65,34 +67,8 @@ class Variables implements VariablesInterface, \ArrayAccess, \Countable, \Iterat
 
     public function getVariable($name)
     {
-        $properties = null;
-        if (self::isCompoundName($name)) {
-            list ($name, $properties) = self::splitName($name, 2);
-        }
-        if ($this->hasVariable($name)) {
-            $value = $this->variables[$name];
-        } elseif ($this->isStrict()) {
-            throw new \InvalidArgumentException("Unknown variable: $name");
-        } else {
-            $value = null;
-        }
-        if (is_array($value)) {
-            if (self::isReference($value)) {
-                $value = new Reference($value);
-            } else {
-                $value = new Variables($value);
-            }
-        }
-        if (!empty($properties)) {
-            if ($value instanceof Variables) {
-                $value = $value->getVariable($properties);
-            } elseif ($this->isStrict()) {
-                throw new \InvalidArgumentException("Unknown variable: $name");
-            } else {
-                $value = null;
-            }
-        }
-        return $value;
+        $builder = new VariableBuilder(str_replace('.', '/', $name));
+        return $builder->make($this->variables);
     }
 
     public function getVariables()
