@@ -31,26 +31,4 @@ class VariablesTest extends \PHPUnit_Framework_TestCase
         $vars = new Variables(['one' => 1]);
         $this->assertNull($vars->get('one/two'));
     }
-
-    public function testIsReference()
-    {
-        $this->assertTrue(Variables::isReference(['$ref' => 'file.json']));
-    }
-
-    public function testNotReferenceBecauseTooManyValues()
-    {
-        $this->assertFalse(Variables::isReference(['$ref' => 'file.json', 'one' => 'two']));
-    }
-
-    public function testNotReferenceBecauseWrongKey()
-    {
-        $this->assertFalse(Variables::isReference(['ref' => 'file.json']));
-    }
-
-    public function testReference()
-    {
-        $ref = "another/file.json";
-        $vars = new Variables(['one' => ['$ref' => $ref]]);
-        $this->assertInstanceOf(Reference::class, $vars->get('one'));
-    }
 }
