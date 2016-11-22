@@ -13,11 +13,6 @@ class Docblock implements DocblockInterface
     protected static $parser;
 
     /**
-     * @var callable
-     */
-    protected $callback;
-
-    /**
      * @var string
      */
     protected $definition;
@@ -53,11 +48,6 @@ class Docblock implements DocblockInterface
     protected $type;
 
     /**
-     * @var string
-     */
-    protected $variable;
-
-    /**
      * @return DocBlockFactory
      */
     protected static function getParser()
@@ -72,14 +62,6 @@ class Docblock implements DocblockInterface
     {
         $this->docblock = $docblock;
         $this->parse();
-    }
-
-    /**
-     * @return callable
-     */
-    public function getCallback()
-    {
-        return $this->callback;
     }
 
     /**
@@ -131,14 +113,6 @@ class Docblock implements DocblockInterface
     }
 
     /**
-     * @return string
-     */
-    public function getVariable()
-    {
-        return $this->variable;
-    }
-
-    /**
      * @return bool
      */
     public function hasTemplate()
@@ -153,12 +127,6 @@ class Docblock implements DocblockInterface
         $this->description = (string)$doc->getDescription();
         foreach ($doc->getTags() as $tag) {
             switch ($tag->getName()) {
-                case 'outpost\content\callback':
-                    $this->callback = (string)$tag;
-                    break;
-                case 'outpost\content\variable':
-                    $this->variable = (string)$tag;
-                    break;
                 case 'outpost\json':
                     $json = (string)$tag;
                     if ($json && (null !== $parsed = json_decode($json, true))) {

@@ -32,11 +32,6 @@ interface ReflectionClassInterface
     public function getName();
 
     /**
-     * @return array
-     */
-    public function getProperties();
-
-    /**
      * @return int
      */
     public function getStartLine();

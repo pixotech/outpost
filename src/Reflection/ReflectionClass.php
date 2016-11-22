@@ -19,8 +19,6 @@ class ReflectionClass implements ReflectionClassInterface
 
     protected $libraryRoot;
 
-    protected $properties;
-
     protected $reflection;
 
     public function __construct($clas, FileInterface $file = null)
@@ -72,17 +70,6 @@ class ReflectionClass implements ReflectionClassInterface
     public function getName()
     {
         return $this->getReflection()->getName();
-    }
-
-    public function getProperties()
-    {
-        if (!isset($this->properties)) {
-            $this->properties = [];
-            foreach ($this->getReflection()->getProperties() as $prop) {
-                $this->properties[$prop->getName()] = new Property($prop);
-            }
-        }
-        return $this->properties;
     }
 
     public function getSource()

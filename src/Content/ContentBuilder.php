@@ -3,38 +3,66 @@
 namespace Outpost\Content;
 
 use Outpost\Content\Builders\ObjectBuilder;
-use Outpost\Reflection\Property;
+use phpDocumentor\Reflection\DocBlockFactory;
 
 class ContentBuilder extends ObjectBuilder
 {
+    /**
+     * @var DocBlockFactory
+     */
+    protected static $parser;
+
+    /**
+     * @return DocBlockFactory
+     */
+    protected static function getParser()
+    {
+        if (!isset(self::$parser)) {
+            self::$parser = DocBlockFactory::createInstance();
+        }
+        return self::$parser;
+    }
+
     public function __construct($className)
     {
         parent::__construct($className, $this->findContentProperties($className));
     }
 
+    protected function extractBuilderParametersFromProperty($className, \ReflectionProperty $property)
+    {
+        $variable = null;
+        $callback = null;
+        $doc = self::getParser()->create($property->getDocComment());
+        foreach ($doc->getTags() as $tag) {
+            switch ($tag->getName()) {
+                case 'outpost\content\callback':
+                    $callback = $this->normalizeCallback((string)$tag, $className);
+                    break;
+                case 'outpost\content\variable':
+                    $variable = (string)$tag;
+                    break;
+            }
+        }
+        return [$variable, $callback];
+    }
+
     protected function findContentProperties($className)
     {
         $properties = [];
-        foreach ($this->getReflection($className)->getProperties() as $property) {
-            try {
-                $prop = new Property($property);
-                if (!$prop->getVariable() && !$prop->getCallback()) continue;
-                $properties[$prop->getName()] = new PropertyBuilder($prop->getVariable(), $prop->getCallback());
-            } catch (\DomainException $e) {
-                continue;
+        $clas = new \ReflectionClass($className);
+        foreach ($clas->getProperties() as $property) {
+            $name = $property->getName();
+            list($variable, $callback) = $this->extractBuilderParametersFromProperty($className, $property);
+            if ($variable || $callback) {
+                $properties[$name] = new PropertyBuilder($variable, $callback);
             }
         }
         return $properties;
     }
 
-    protected function getReflection($className)
-    {
-        return new \ReflectionClass($className);
-    }
-
     protected function makeObject(array $properties)
     {
-        $clas = $this->getReflection($this->className);
+        $clas = new \ReflectionClass($this->className);
         $obj = $clas->newInstanceWithoutConstructor();
         foreach ($properties as $name => $value) {
             $property = $clas->getProperty($name);
@@ -42,5 +70,19 @@ class ContentBuilder extends ObjectBuilder
             $property->setValue($obj, $value);
         }
         return $obj;
+    }
+
+    protected function normalizeCallback($callback, $parentClass)
+    {
+        if (is_string($callback)) {
+            if (false !== strpos($callback, '::')) {
+                list($className, $method) = explode('::', $callback, 2);
+                if (empty($className) || $className == 'self') {
+                    $className = $parentClass;
+                }
+                $callback = [$className, $method];
+            }
+        }
+        return $callback;
     }
 }
