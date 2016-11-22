@@ -27,11 +27,6 @@ interface SiteInterface
     public function getCache();
 
     /**
-     * @return \Outpost\Content\Factory\Factory
-     */
-    public function getContent();
-
-    /**
      * @return LoggerInterface
      */
     public function getLog();
@@ -56,13 +51,6 @@ interface SiteInterface
      * @param mixed $level
      */
     public function log($message, $level = null);
-
-    /**
-     * @param string $className
-     * @param array $variables
-     * @return mixed
-     */
-    public function make($className, array $variables);
 
     /**
      * @param \Exception $error

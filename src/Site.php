@@ -11,7 +11,6 @@ namespace Outpost;
 
 use Monolog\Logger;
 use Outpost\Content\Entity;
-use Outpost\Content\Factory\Factory as ContentFactory;
 use Outpost\Files\Directory;
 use Outpost\Files\TemplateFile;
 use Outpost\Reflection\ReflectionClass;
@@ -31,11 +30,6 @@ class Site implements SiteInterface, \ArrayAccess
      * @var Pool
      */
     protected $cache;
-
-    /**
-     * @var ContentFactory
-     */
-    protected $content;
 
     /**
      * @var ReflectionClass[]
@@ -119,15 +113,6 @@ class Site implements SiteInterface, \ArrayAccess
     {
         if (!isset($this->cache)) $this->cache = $this->makeCache();
         return $this->cache;
-    }
-
-    /**
-     * @return ContentFactory
-     */
-    public function getContent()
-    {
-        if (!isset($this->content)) $this->content = $this->makeContentFactory();
-        return $this->content;
     }
 
     public function getEntities()
@@ -233,16 +218,6 @@ class Site implements SiteInterface, \ArrayAccess
         $eClass = get_class($e);
         $message = sprintf("%s: %s (%s, line %d", $eClass, $e->getMessage(), $e->getFile(), $e->getLine());
         $this->log($message, $level);
-    }
-
-    /**
-     * @param string $className
-     * @param array $variables
-     * @return mixed
-     */
-    public function make($className, array $variables)
-    {
-        return $this->getContent()->create($className, $variables);
     }
 
     /**
