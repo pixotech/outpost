@@ -6,14 +6,16 @@
 <div class="template-preview-widget">
 
     <div class="resizer">
-        <div class="resizer__breakpoint{{ current ?: " resizer__breakpoint--current" }} resizer__breakpoint--full-width" style="width:100%;margin-left:-50%;z-index:0;" data-preview-id="{{ id }}" data-breakpoint-size="100%">
-            <div class="resizer__breakpoint-label">100%</div>
-        </div>
-        {% for breakpoint in breakpoints_sorted %}
-            <div id="{{ id }}_breakpoint_{{ loop.index }}" class="resizer__breakpoint{{ breakpoint == current ? " resizer__breakpoint--current" }}" style="width:{{ breakpoint }}px;margin-left:-{{ breakpoint/2 }}px;z-index:{{ loop.index }};" data-preview-id="{{ id }}" data-breakpoint-size="{{ breakpoint }}px">
-                <div class="resizer__breakpoint-label">{{ breakpoint }}px</div>
+        <div class="resizer__inner">
+            <div class="resizer__breakpoint{{ current ?: " resizer__breakpoint--current" }} resizer__breakpoint--full-width" style="width:100%;margin-left:-50%;z-index:0;" data-preview-id="{{ id }}" data-breakpoint-size="100%">
+                <div class="resizer__breakpoint-label">100%</div>
             </div>
-        {% endfor %}
+            {% for breakpoint in breakpoints_sorted %}
+                <div id="{{ id }}_breakpoint_{{ loop.index }}" class="resizer__breakpoint{{ breakpoint == current ? " resizer__breakpoint--current" }}" style="width:{{ breakpoint }}px;margin-left:-{{ breakpoint/2 }}px;z-index:{{ loop.index }};" data-preview-id="{{ id }}" data-breakpoint-size="{{ breakpoint }}px">
+                    <div class="resizer__breakpoint-label">{{ breakpoint }}px</div>
+                </div>
+            {% endfor %}
+        </div>
     </div>
 
     <div class="resizer__preview-container-outer">
