@@ -18,6 +18,7 @@ class ContentBuilder extends ObjectBuilder
         foreach ($this->getReflection($className)->getProperties() as $property) {
             try {
                 $prop = new Property($property);
+                if (!$prop->getVariable() && !$prop->getCallback()) continue;
                 $properties[$prop->getName()] = new PropertyBuilder($prop->getVariable(), $prop->getCallback());
             } catch (\DomainException $e) {
                 continue;

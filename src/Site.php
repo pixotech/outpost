@@ -10,7 +10,6 @@
 namespace Outpost;
 
 use Monolog\Logger;
-use Outpost\Content\Entity;
 use Outpost\Files\Directory;
 use Outpost\Files\TemplateFile;
 use Outpost\Reflection\ReflectionClass;
@@ -113,22 +112,6 @@ class Site implements SiteInterface, \ArrayAccess
     {
         if (!isset($this->cache)) $this->cache = $this->makeCache();
         return $this->cache;
-    }
-
-    public function getEntities()
-    {
-        if (!isset($this->entities)) {
-            $this->entities = [];
-            $library = $this->getLibraryClasses();
-            $templates = $this->getTemplates();
-            foreach ($library as $className => $libraryClass) {
-                if ($libraryClass->hasTemplate() && isset($templates[$libraryClass->getTemplate()])) {
-                    $entity = new Entity($libraryClass, $templates[$libraryClass->getTemplate()]);
-                    $this->entities[$className] = $entity;
-                }
-            }
-        }
-        return $this->entities;
     }
 
     /**
@@ -399,14 +382,6 @@ class Site implements SiteInterface, \ArrayAccess
     protected function makeCache()
     {
         return new Pool($this->getCacheDriver());
-    }
-
-    /**
-     * @return ContentFactory
-     */
-    protected function makeContentFactory()
-    {
-        return new ContentFactory();
     }
 
     /**
