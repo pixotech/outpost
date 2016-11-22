@@ -8,32 +8,26 @@
 
     <h2>Properties</h2>
 
+    {% if entity.templateProperties %}
     <table>
         <thead>
         <tr>
             <th>Property</th>
             <th>Type</th>
-            <th>Required?</th>
             <th>Description</th>
         </tr>
         </thead>
         <tbody>
-        {% for property in entity.properties %}
+        {% for property in entity.templateProperties %}
             <tr>
-                <td>{{ property.summary ?: property.name }}</td>
-                <td>
-                    {% if property.object %}
-                        <a href="#">{{ property.entity }}</a>
-                    {% else %}
-                        {{ property.type }}
-                    {% endif %}
-                </td>
-                <td>{{ property.required ? 'Yes' : 'No' }}</td>
+                <td>{{ property.name }}</td>
+                <td>{{ property.type }}</td>
                 <td>{{ property.description }}</td>
             </tr>
         {% endfor %}
         </tbody>
     </table>
+    {% endif %}
 
     <h2>Code</h2>
 

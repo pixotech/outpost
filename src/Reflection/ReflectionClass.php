@@ -92,25 +92,24 @@ class ReflectionClass implements ReflectionClassInterface
         return $this->docblock ? $this->docblock->getTemplate() : null;
     }
 
-    public function getTemplateVariables()
+    public function getTemplateProperties()
     {
-        $vars = [];
-        foreach ($this->getReflection()->getProperties(\ReflectionProperty::IS_PUBLIC) as $prop) {
-            $vars[$prop->getName()] = ['type' => 'public property', 'prop' => $prop];
-        }
-        foreach ($this->getPublicGetterMethods() as $name => $method) {
-            if (isset($vars[$name])) continue;
-            $prop = ['type' => 'public getter', 'prop' => $method];
-            $prop['has_setter'] = $this->hasSetterMethod($name);
-            $prop['has_test'] = $this->hasTestMethod($name);
-            $vars[$name] = $prop;
-        }
-        return $vars;
+        return TemplateProperty::fromClass($this->getReflection());
     }
 
     public function hasGetterMethod($name)
     {
         return $this->hasPublicNonStaticMethod('get' . ucfirst($name));
+    }
+
+    public function hasMagicGetMethod()
+    {
+        return $this->reflection->hasMethod('__get') && $this->reflection->getMethod('__get')->isPublic();
+    }
+
+    public function hasMagicIssetMethod()
+    {
+        return $this->reflection->hasMethod('__isset') && $this->reflection->getMethod('__isset')->isPublic();
     }
 
     public function hasSetterMethod($name)
