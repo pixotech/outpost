@@ -6,6 +6,9 @@ abstract class Builder implements BuilderInterface
 {
     public static function create($definition)
     {
+        if ($definition instanceof BuilderInterface) {
+            return $definition;
+        }
         $isCollection = false;
         if (is_array($definition)) {
             if (isset($definition['$class'])) {

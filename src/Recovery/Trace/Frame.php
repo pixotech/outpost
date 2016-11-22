@@ -125,30 +125,33 @@ class Frame
     protected function getReflection()
     {
         if (!empty($this->class)) return new \ReflectionMethod($this->class, $this->function);
-        else return new \ReflectionFunction($this->function);
+        else return function_exists($this->function) ? new \ReflectionFunction($this->function) : null;
     }
 
     protected function makeArgumentsList()
     {
-        $parameters = $this->reflection->getParameters();
-        $table = '<table class="arguments">';
-        for ($i = 0, $len = $this->getNumberOfArguments(); $i < $len; $i++) {
-            $table .= '<tr>';
-            $table .= '<th>';
-            if (!empty($parameters[$i])) {
-                $table .= '$' . $parameters[$i]->getName();
-            } else {
-                $table .= '...';
+        $table = '';
+        if ($this->reflection) {
+            $parameters = $this->reflection->getParameters();
+            $table .= '<table class="arguments">';
+            for ($i = 0, $len = $this->getNumberOfArguments(); $i < $len; $i++) {
+                $table .= '<tr>';
+                $table .= '<th>';
+                if (!empty($parameters[$i])) {
+                    $table .= '$' . $parameters[$i]->getName();
+                } else {
+                    $table .= '...';
+                }
+                $table .= '</th>';
+                $table .= '<td>';
+                if (array_key_exists($i, $this->arguments)) {
+                    $table .= $this->formatParameterValue($this->arguments[$i]);
+                }
+                $table .= '</td>';
+                $table .= '</tr>';
             }
-            $table .= '</th>';
-            $table .= '<td>';
-            if (array_key_exists($i, $this->arguments)) {
-                $table .= $this->formatParameterValue($this->arguments[$i]);
-            }
-            $table .= '</td>';
-            $table .= '</tr>';
+            $table .= '</table>';
         }
-        $table .= '</table>';
         return $table;
     }
 
@@ -160,22 +163,23 @@ class Frame
     protected function makeFunctionString()
     {
         $str = '';
-        $str .= '<div class="function">';
-        if ($this->reflection instanceof \ReflectionMethod) {
-            $str .= '<span>' . $this->reflection->getDeclaringClass()->getName() . '</span>';
-            $str .= '<span class="separator">::</span>';
+        if ($this->reflection) {
+            $str .= '<div class="function">';
+            if ($this->reflection instanceof \ReflectionMethod) {
+                $str .= '<span>' . $this->reflection->getDeclaringClass()->getName() . '</span>';
+                $str .= '<span class="separator">::</span>';
+            }
+            $str .= '<span class="name">' . $this->reflection->getName() . '</span>';
+            $str .= $this->formatFunctionParameters();
+            $str .= '</div>';
+
+
+            if ($this->reflection->getDocComment()) {
+                $str .= '<pre class="comment">';
+                $str .= htmlentities($this->reflection->getDocComment());
+                $str .= '</pre>';
+            }
         }
-        $str .= '<span class="name">' . $this->reflection->getName() . '</span>';
-        $str .= $this->formatFunctionParameters();
-        $str .= '</div>';
-
-
-        if ($this->reflection->getDocComment()) {
-            $str .= '<pre class="comment">';
-            $str .= htmlentities($this->reflection->getDocComment());
-            $str .= '</pre>';
-        }
-
         return $str;
     }
 

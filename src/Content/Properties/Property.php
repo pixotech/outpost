@@ -2,8 +2,6 @@
 
 namespace Outpost\Content\Properties;
 
-use Outpost\Content\Variables;
-use Outpost\Reflection\Docblock;
 use Outpost\Reflection\PropertyInterface as ReflectionPropertyInterface;
 
 class Property implements PropertyInterface
@@ -66,19 +64,6 @@ class Property implements PropertyInterface
     public function __construct(ReflectionPropertyInterface $property)
     {
         $this->reflection = $property;
-    }
-
-    public function __invoke(Variables $variables)
-    {
-        if ($this->hasVariable()) {
-            $value = $variables->get($this->getVariable());
-        } else {
-            $value = $variables->getVariables();
-        }
-        if ($this->hasCallback()) {
-            $value = call_user_func($this->getCallback(), $value);
-        }
-        return $value;
     }
 
     /**

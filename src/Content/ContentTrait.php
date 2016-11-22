@@ -7,7 +7,8 @@ trait ContentTrait
     public static function make($variables)
     {
         if (!is_array($variables)) return null;
-        return call_user_func(new ContentClass(get_called_class()), new Variables($variables));
+        $builder = new ContentBuilder(get_called_class());
+        return $builder->make($variables);
     }
 
     public static function makeAll($items)

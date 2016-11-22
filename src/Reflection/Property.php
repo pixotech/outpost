@@ -2,8 +2,6 @@
 
 namespace Outpost\Reflection;
 
-use Outpost\Content\Variables;
-
 class Property implements PropertyInterface
 {
     /**
@@ -45,19 +43,6 @@ class Property implements PropertyInterface
     {
         $this->reflection = $reflection;
         if ($comment = $reflection->getDocComment()) $this->parseDocComment($comment);
-    }
-
-    public function __invoke(Variables $variables)
-    {
-        if ($this->hasVariable()) {
-            $value = $variables->get($this->getVariable());
-        } else {
-            $value = $variables->getVariables();
-        }
-        if ($this->hasCallback()) {
-            $value = call_user_func($this->getCallback(), $value);
-        }
-        return $value;
     }
 
     /**
