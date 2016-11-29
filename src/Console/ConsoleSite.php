@@ -41,7 +41,7 @@ class ConsoleSite extends Site
 
     public function getScript()
     {
-        return $this->getJquery() . $this->getPym() . $this->getAssetContents('outpost.js');
+        return $this->getJquery() . $this->getFlight() . $this->getPym() . $this->getAssetContents('outpost.js');
     }
 
     public function getSite()
@@ -98,6 +98,11 @@ class ConsoleSite extends Site
     protected function getAssetContents($path)
     {
         return file_get_contents(__DIR__ . "/../../assets/{$path}");
+    }
+
+    protected function getFlight()
+    {
+        return $this->getAssetContents('flight/flight.js');
     }
 
     protected function getJquery()
