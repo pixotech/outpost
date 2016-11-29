@@ -1,11 +1,16 @@
+
+{% set links = [
+    { id: "home", label: "Overview", url: "/"},
+    { id: "templates", label: "Templates", url: "/_outpost/templates"},
+    { id: "classes", label: "Classes", url: "/_outpost/classes"},
+] %}
+
 <nav class="main-nav">
-    <h2 class="main-nav__title">Outpost</h2>
     <ul class="main-nav__top-level">
-        <li class="main-nav__top-level-item main-nav__top-level-item--active">
-            <a class="main-nav__top-level-link" href="/_outpost/templates">Templates</a>
+        {% for link in links %}
+        <li class="main-nav__top-level-item {{ activeItem == link.id ? "main-nav__top-level-item--active" }}">
+            <a class="main-nav__top-level-link" href="{{ link.url }}">{{ link.label }}</a>
         </li>
-        <li class="main-nav__top-level-item">
-            <a class="main-nav__top-level-link" href="/_outpost/classes">Classes</a>
-        </li>
+        {% endfor %}
     </ul>
 </nav>

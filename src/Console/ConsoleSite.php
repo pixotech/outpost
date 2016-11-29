@@ -4,6 +4,7 @@ namespace Outpost\Console;
 
 use Outpost\Console\Responders\Content\ContentEntityResponder;
 use Outpost\Console\Responders\Content\ContentIndexResponder;
+use Outpost\Console\Responders\DashboardResponder;
 use Outpost\Console\Responders\Templates\TemplateIndexResponder;
 use Outpost\Console\Responders\Templates\TemplatePreviewResponder;
 use Outpost\Files\Directory;
@@ -83,7 +84,7 @@ class ConsoleSite extends Site
         if ($requestPath == '/favicon.ico') {
             return null;
         }
-        return parent::respond($request);
+        parent::respond($request);
     }
 
     /**
@@ -117,10 +118,11 @@ class ConsoleSite extends Site
     protected function makeRouter()
     {
         $router = parent::makeRouter();
-        $router->route('GET', '_outpost/classes', new ContentIndexResponder());
-        $router->route('GET', '_outpost/classes/entity', new ContentEntityResponder());
-        $router->route('GET', '_outpost/templates', new TemplateIndexResponder());
-        $router->route('GET', '_outpost/templates/preview', new TemplatePreviewResponder());
+        $router->route('GET', '/', new DashboardResponder());
+        $router->route('GET', '/_outpost/classes', new ContentIndexResponder());
+        $router->route('GET', '/_outpost/classes/entity', new ContentEntityResponder());
+        $router->route('GET', '/_outpost/templates', new TemplateIndexResponder());
+        $router->route('GET', '/_outpost/templates/preview', new TemplatePreviewResponder());
         return $router;
     }
 
