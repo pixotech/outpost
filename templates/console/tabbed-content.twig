@@ -1,0 +1,16 @@
+{% set b = bem('tabbed content') %}
+
+<div class="{{ b }}">
+    <ul class="{{ b.tabs }}" role="tablist">
+        {% for tab in tabs %}
+            <li id="tab-{{ loop.index }}" class="{{ b.tab }}" aria-controls="tab-panel-{{ loop.index }}" role="tab">{{ tab.name }}</li>
+        {% endfor %}
+    </ul>
+    <div class="{{ b.panels }}">
+        {% for tab in tabs %}
+            <div id="tab-panel-{{ loop.index }}" aria-labelledby="tab-{{ loop.index }}" role="tabpanel">
+                {{ tab.content }}
+            </div>
+        {% endfor %}
+    </div>
+</div>

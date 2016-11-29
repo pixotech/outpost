@@ -8,10 +8,7 @@ class DashboardResponder
 {
     public function __invoke(ConsoleSite $site)
     {
-        $vars = [
-            'stylesheet' => $site->getStylesheet(),
-            'script' => $site->getScript(),
-        ];
+        $vars = $site->getTemplateVariables();
         print $site->render("console/index.twig", $vars);
     }
 }

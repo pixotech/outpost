@@ -16,10 +16,7 @@ class ContentEntityResponder
             return;
         }
         $entity = $classes[$request->query->get("name")];
-        $vars = [
-            'stylesheet' => $site->getStylesheet(),
-            'script' => $site->getScript(),
-        ];
+        $vars = $site->getTemplateVariables();
         $vars['entity'] = $entity;
         print $site->render("console/content/entity.twig", $vars);
     }

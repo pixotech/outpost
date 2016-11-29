@@ -9,10 +9,7 @@ class TemplateIndexResponder
     public function __invoke(ConsoleSite $site)
     {
         $templates = $site->getSite()->getTemplates();
-        $vars = [
-            'stylesheet' => $site->getStylesheet(),
-            'script' => $site->getScript(),
-        ];
+        $vars = $site->getTemplateVariables();
         if (!empty($_GET['template'])) {
             if (isset($templates[$_GET['template']])) {
                 $vars['template'] = $templates[$_GET['template']];

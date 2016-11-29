@@ -10,6 +10,7 @@ use Outpost\Console\Responders\Templates\TemplatePreviewResponder;
 use Outpost\Files\Directory;
 use Outpost\Site;
 use Outpost\SiteInterface;
+use Outpost\Twig\Functions\BemSelectorFunction;
 use Symfony\Component\HttpFoundation\Request;
 
 class ConsoleSite extends Site
@@ -24,6 +25,22 @@ class ConsoleSite extends Site
     public function __construct(SiteInterface $site)
     {
         $this->site = $site;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFooterScript()
+    {
+        return $this->getAssetContents('outpost.js');
+    }
+
+    /**
+     * @return string
+     */
+    public function getHeaderScript()
+    {
+        return $this->getJquery() . $this->getFlight() . $this->getPym();
     }
 
     /**
@@ -52,6 +69,15 @@ class ConsoleSite extends Site
     public function getStylesheet()
     {
         return file_get_contents(__DIR__ . '/../../assets/outpost.css');
+    }
+
+    public function getTemplateVariables()
+    {
+        return [
+            'stylesheet' => $this->getStylesheet(),
+            'headerScript' => $this->getHeaderScript(),
+            'footerScript' => $this->getFooterScript(),
+        ];
     }
 
     public function respond(Request $request)
@@ -134,5 +160,12 @@ class ConsoleSite extends Site
     protected function makeTwigLoader()
     {
         return new \Twig_Loader_Filesystem($this->getTemplatesPath());
+    }
+
+    protected function makeTwigParser()
+    {
+        $twig = parent::makeTwigParser();
+        $twig->addFunction(new BemSelectorFunction());
+        return $twig;
     }
 }

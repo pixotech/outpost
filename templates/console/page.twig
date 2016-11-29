@@ -6,19 +6,22 @@
     {% if stylesheet %}
         <style>{{ stylesheet|raw }}</style>
     {% endif %}
-    {% if script %}
-        <script>{{ script|raw }}</script>
+    {% if headerScript %}
+        <script>{{ headerScript|raw }}</script>
     {% endif %}
 </head>
 <body>
 
     <header>
-        {% include "navigation/main.twig" %}
+        {% include "console/navigation/main.twig" %}
     </header>
 
     <main>
         {% block body "" %}
     </main>
 
+    {% if footerScript %}
+        <script>{{ footerScript|raw }}</script>
+    {% endif %}
 </body>
 </html>

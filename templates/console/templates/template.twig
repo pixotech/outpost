@@ -1,6 +1,6 @@
 {% set activeItem = "templates" %}
 
-{% extends "page.twig" %}
+{% extends "console/page.twig" %}
 
 {% block body %}
 
@@ -16,30 +16,28 @@
 
     </div>
 
-    <div class="switcher">
-        <div class="view-switcher">
+    {% set preview %}
+        <div class="template-preview">
+            <div class="switcher__actions">
 
-            <ul class="switcher__view-switcher" role="tablist">
-                <li id="template_preview_tab" class="switcher__view-switcher-item" aria-controls="template_preview" role="tab">Preview</li>
-                <li id="template_contents_tab" class="switcher__view-switcher-item" aria-controls="template_contents" role="tab">Template</li>
-            </ul>
+                <p class="switcher__action"><a target="_blank" href="/_outpost/templates/preview?template={{ template.templateName|e("url") }}">Open in new window</a></p>
 
+                <p class="switcher__action"><a href="javascript:new pym.Parent('preview', '/_outpost/templates/preview?template={{ template.templateName|e("url") }}', {});">Refresh</a></p>
+
+            </div>
+            {% include "console/templates/preview/widget.twig" %}
         </div>
-        <div class="switcher__actions">
+    {% endset %}
 
-            <p class="switcher__action"><a target="_blank" href="/_outpost/templates/preview?template={{ template.templateName|e("url") }}">Open in new window</a></p>
-
-            <p class="switcher__action"><a href="javascript:new pym.Parent('preview', '/_outpost/templates/preview?template={{ template.templateName|e("url") }}', {});">Refresh</a></p>
-
+    {% set source %}
+        <div class="template-source">
+            <pre>{{ template.contents }}</pre>
         </div>
-    </div>
+    {% endset %}
 
-    <div id="template_preview" aria-labelledby="template_preview_tab" role="tabpanel">
-        {% include "console/templates/preview/widget.twig" %}
-    </div>
-
-    <div id="template_contents" aria-labelledby="template_contents_tab" role="tabpanel">
-        <pre>{{ template.contents }}</pre>
-    </div>
+    {% include "console/tabbed-content.twig" with { tabs: [
+        { name: 'Preview', content: preview },
+        { name: 'Template', content: source }
+    ]} %}
 
 {% endblock %}
