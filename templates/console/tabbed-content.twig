@@ -3,12 +3,12 @@
 <div class="{{ b }}">
     <ul class="{{ b.tabs }}" role="tablist">
         {% for tab in tabs %}
-            <li id="tab-{{ loop.index }}" class="{{ b.tab }}" aria-controls="tab-panel-{{ loop.index }}" role="tab" tabindex="0">{{ tab.name }}</li>
+            <li id="tab-{{ loop.index }}" class="{{ loop.first ? b.tab.active : b.tab }}" aria-controls="tab-panel-{{ loop.index }}" role="tab">{{ tab.name }}</li>
         {% endfor %}
     </ul>
     <div class="{{ b.panels }}">
         {% for tab in tabs %}
-            <div id="tab-panel-{{ loop.index }}" aria-labelledby="tab-{{ loop.index }}" role="tabpanel">
+            <div id="tab-panel-{{ loop.index }}" class="{{ loop.first ? b.panel.active : b.panel }}"aria-labelledby="tab-{{ loop.index }}" role="tabpanel">
                 {{ tab.content }}
             </div>
         {% endfor %}
