@@ -10,20 +10,23 @@ class TemplatePreviewResponder
     {
         $templates = $site->getSite()->getTemplates();
         if (!empty($_GET['template'])) {
-            if (isset($templates[$_GET['template']])) {
-                $template = $templates[$_GET['template']];
+            try {
+                $template = $templates->find($_GET['template']);
                 $vars = [];
                 if ($template->hasFixture()) {
                     $vars = $template->getFixture();
                 }
                 $preview = $site->getSite()->render($template->getTemplateName(), $vars);
-                if (!empty($templates['_outpost/preview.twig'])) {
+                if ($templates->contains('_outpost/preview.twig')) {
                     $pym = $site->getPym();
                     $script = $site->render("console/templates/preview-script.twig", ['pym' => $pym]);
                     $preview = $site->getSite()->render("_outpost/preview.twig", ['preview' => $preview, 'script' => $script]);
                 }
                 print $preview;
                 return;
+            } catch (\OutOfBoundsException $e) {
+                header("HTTP/1.0 404 Not Found");
+                print "Not found";
             }
         }
         header("HTTP/1.0 404 Not Found");

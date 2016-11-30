@@ -11,10 +11,10 @@ class TemplateIndexResponder
         $templates = $site->getSite()->getTemplates();
         $vars = $site->getTemplateVariables();
         if (!empty($_GET['template'])) {
-            if (isset($templates[$_GET['template']])) {
-                $vars['template'] = $templates[$_GET['template']];
+            try {
+                $vars['template'] = $templates->find($_GET['template']);
                 print $site->render("console/templates/template.twig", $vars);
-            } else {
+            } catch (\OutOfBoundsException $e) {
                 header("HTTP/1.0 404 Not Found");
                 print "Not found";
             }

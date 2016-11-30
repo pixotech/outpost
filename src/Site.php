@@ -12,7 +12,7 @@ namespace Outpost;
 use Monolog\Logger;
 use Outpost\Files\Directory;
 use Outpost\Files\TemplateFile;
-use Outpost\Reflection\ReflectionClass;
+use Outpost\Reflection\ClassCollection;
 use Outpost\Resources\CacheableInterface;
 use Outpost\Recovery\HelpPage;
 use Outpost\Routing\Router;
@@ -31,7 +31,7 @@ class Site implements SiteInterface, \ArrayAccess
     protected $cache;
 
     /**
-     * @var ReflectionClass[]
+     * @var ClassCollection
      */
     protected $libraryClasses;
 
@@ -115,7 +115,7 @@ class Site implements SiteInterface, \ArrayAccess
     }
 
     /**
-     * @return ReflectionClass[]
+     * @return ClassCollection
      */
     public function getLibraryClasses()
     {

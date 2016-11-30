@@ -5,4 +5,6 @@ namespace Outpost\Files;
 interface FileInterface
 {
     public function getContents();
+
+    public function getTimeModified();
 }

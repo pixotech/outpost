@@ -1,0 +1,5 @@
+{% set b = bem('path') %}
+
+<div class="{{ b }}">
+    {% for segment in path|split("/") %}<span class="{{ loop.last ? b.segment.active : b.segment }}">{{ segment }}</span>{% endfor %}
+</div>

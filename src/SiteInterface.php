@@ -37,7 +37,7 @@ interface SiteInterface
     public function getRouter();
 
     /**
-     * @return \Outpost\Files\TemplateFile[]
+     * @return \Outpost\Files\TemplateFileCollection
      */
     public function getTemplates();
 

@@ -2,6 +2,8 @@
 
 namespace Outpost\Files;
 
+use Outpost\Reflection\ClassCollection;
+
 class Directory implements DirectoryInterface
 {
     protected $path;
@@ -24,11 +26,11 @@ class Directory implements DirectoryInterface
 
     public function getLibraryClasses()
     {
-        $classes = [];
+        $classes = new ClassCollection();
         foreach ($this->getSourceFiles() as $file) {
             if ($file->hasLibraryClass()) {
                 $clas = $file->getLibraryClass();
-                $classes[$clas->getName()] = $clas;
+                $classes->add($clas);
             }
         }
         return $classes;
@@ -39,17 +41,17 @@ class Directory implements DirectoryInterface
      */
     public function getSourceFiles()
     {
-        $files = [];
+        $files = new FileCollection();
         /** @var \SplFileInfo $file */
         foreach ($this->getFilesWithExtensionIterator(SourceFile::EXTENSION) as $file) {
-            $files[] = new SourceFile($file->getRealPath());
+            $files->add(new SourceFile($file->getRealPath()));
         }
         return $files;
     }
 
     public function getTemplateFiles()
     {
-        $files = [];
+        $files = new TemplateFileCollection();
         /** @var \SplFileInfo $file */
         foreach ($this->getFilesWithExtensionIterator(TemplateFile::EXTENSION) as $path => $file) {
             $root = substr($path, 0, strlen($this->path));
@@ -58,7 +60,7 @@ class Directory implements DirectoryInterface
             } else {
                 $root = null;
             }
-            $files[$path] = new TemplateFile($file, $path, $root);
+            $files->add(new TemplateFile($file, $path, $root));
         }
         return $files;
     }

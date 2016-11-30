@@ -1,33 +1,33 @@
+{% set b = bem("template index") %}
 {% set activeItem = "templates" %}
 
 {% extends "console/page.twig" %}
 
 {% block body %}
 
-    <table>
-        <thead>
-            <tr>
-                <th>Template</th>
-                <th>Modified</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for template in templates %}
-                <tr>
-                    <td>
-                        <a href="/_outpost/templates?template={{ template.templateName|e("url") }}">{{ template.templateName }}</a>
-                    </td>
-                    <td>
-                        {{ template.timeModified|date('F j, g:i A') }}
-                    </td>
-                    <td>
-                        <a href="/_outpost/templates/preview?template={{ template.templateName|e("url") }}">Preview</a>
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="{{ b }}">
 
+        {% for template in templates %}
+            <div class="{{ b.template }}">
+                <div class="{{ b.template_info }}">
+                    <div class="{{ b.template_name }}">
+                        <a href="/_outpost/templates?template={{ template.templateName|e("url") }}">
+                            {% include "console/path.twig" with { path: template.templateName } %}
+                        </a>
+                    </div>
+                </div>
+                <div class="{{ b.template_modified }}">
+                    {{ template.timeModified|date('F j, g:i A') }}
+                </div>
+                <div class="{{ b.template_age }}">
+                    <span class="{{ b.age }}" data-time-modified="{{ template.timeModified }}"></span>
+                </div>
+                <div class="{{ b.template_actions }}">
+                    <a href="/_outpost/templates/preview?template={{ template.templateName|e("url") }}">Preview</a>
+                </div>
+            </div>
+        {% endfor %}
+
+    </div>
 
 {% endblock %}
