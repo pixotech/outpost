@@ -9,6 +9,8 @@
 
 namespace Outpost;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use Monolog\Logger;
 use Outpost\Files\Directory;
 use Outpost\Files\TemplateFile;
@@ -29,6 +31,11 @@ class Site implements SiteInterface, \ArrayAccess
      * @var Pool
      */
     protected $cache;
+
+    /**
+     * @var ClientInterface
+     */
+    protected $http;
 
     /**
      * @var ClassCollection
@@ -112,6 +119,15 @@ class Site implements SiteInterface, \ArrayAccess
     {
         if (!isset($this->cache)) $this->cache = $this->makeCache();
         return $this->cache;
+    }
+
+    /**
+     * @return ClientInterface
+     */
+    public function getHttpClient()
+    {
+        if (!isset($this->http)) $this->http = $this->makeHttpClient();
+        return $this->http;
     }
 
     /**
@@ -205,6 +221,9 @@ class Site implements SiteInterface, \ArrayAccess
 
     /**
      * @deprecated
+     * @param string $key
+     * @returns bool
+     * @throws \BadMethodCallException
      */
     public function offsetExists($key)
     {
@@ -213,6 +232,8 @@ class Site implements SiteInterface, \ArrayAccess
 
     /**
      * @deprecated
+     * @param string $key
+     * @returns null
      */
     public function offsetGet($key)
     {
@@ -252,6 +273,7 @@ class Site implements SiteInterface, \ArrayAccess
 
     /**
      * @deprecated
+     * @param string $key
      */
     public function offsetUnset($key)
     {
@@ -317,6 +339,14 @@ class Site implements SiteInterface, \ArrayAccess
     protected function getCacheDriver()
     {
         return new Ephemeral();
+    }
+
+    /**
+     * @return array
+     */
+    protected function getHttpClientOptions()
+    {
+        return [];
     }
 
     /**
@@ -397,6 +427,14 @@ class Site implements SiteInterface, \ArrayAccess
             $content = $e->getMessage();
         }
         return new Response($content, $status);
+    }
+
+    /**
+     * @return Client
+     */
+    protected function makeHttpClient()
+    {
+        return new Client($this->getHttpClientOptions());
     }
 
     /**

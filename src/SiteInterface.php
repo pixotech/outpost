@@ -9,6 +9,7 @@
 
 namespace Outpost;
 
+use GuzzleHttp\ClientInterface;
 use Psr\Log\LoggerInterface;
 use Stash\Pool;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,6 +26,11 @@ interface SiteInterface
      * @return Pool
      */
     public function getCache();
+
+    /**
+     * @return ClientInterface
+     */
+    public function getHttpClient();
 
     /**
      * @return LoggerInterface
