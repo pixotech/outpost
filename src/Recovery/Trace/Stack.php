@@ -44,7 +44,7 @@ class Stack extends SplStack {
     foreach ($exception->getTrace() as $frame) {
       $this->push(new Frame($this, $frame));
     }
-    $this->push($this, []);
+    $this->push(new Frame($this, []));
   }
 
   public function __toString() {

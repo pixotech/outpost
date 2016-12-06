@@ -56,7 +56,9 @@ class Frame
             $trace = '<li>';
             $trace .= $this->makeFunctionString();
             $trace .= $this->makeArgumentsList();
-            $trace .= new Excerpt($this->getFile(), $this->getLine());
+            if ($this->file) {
+                $trace .= new Excerpt($this->getFile(), $this->getLine());
+            }
             $trace .= '</li>';
             return $trace;
         } catch (\Exception $e) {
