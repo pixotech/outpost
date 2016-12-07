@@ -3,6 +3,8 @@
 namespace Outpost\Resources;
 
 use GuzzleHttp\Exception\GuzzleException;
+use Outpost\Http\NewRequestEvent;
+use Outpost\Http\ResponseReceivedEvent;
 use Outpost\SiteInterface;
 
 class HttpResource implements HttpResourceInterface
@@ -25,8 +27,9 @@ class HttpResource implements HttpResourceInterface
         try {
             $url = $this->getRequestUrl();
             $method = $this->getRequestMethod();
-            $site->getLog()->notice("HTTP {$method} {$url}");
+            $site->log(new NewRequestEvent($method, $url));
             $response = $site->getHttpClient()->request($method, $url, $this->getRequestOptions());
+            $site->log(new ResponseReceivedEvent($method, $url, $response->getStatusCode()));
             return (string)$response->getBody();
         } catch (GuzzleException $e) {
             $site->getLog()->error($e->getMessage());

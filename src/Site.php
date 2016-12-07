@@ -12,6 +12,12 @@ namespace Outpost;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use Monolog\Logger;
+use Outpost\Cache\Events\ItemFoundEvent;
+use Outpost\Cache\Events\ItemMissingEvent;
+use Outpost\Events\EventInterface;
+use Outpost\Events\ExceptionEvent;
+use Outpost\Events\RequestReceivedEvent;
+use Outpost\Events\ResponseCompleteEvent;
 use Outpost\Files\Directory;
 use Outpost\Files\TemplateFile;
 use Outpost\Reflection\ClassCollection;
@@ -19,6 +25,7 @@ use Outpost\Resources\CacheableInterface;
 use Outpost\Recovery\HelpPage;
 use Outpost\Routing\Router;
 use Outpost\Routing\RouterInterface;
+use Outpost\Templates\RenderableInterface;
 use Psr\Log\LogLevel;
 use Stash\Driver\Ephemeral;
 use Stash\Pool;
@@ -98,13 +105,13 @@ class Site implements SiteInterface, \ArrayAccess
             $cached = $this->getCache()->getItem($key);
             $result = $cached->get();
             if ($cached->isMiss()) {
-                $this->log(sprintf("Not found: %s", $key), LogLevel::NOTICE);
+                $this->log(new ItemMissingEvent($key));
                 $cached->lock();
                 $result = call_user_func($resource, $this);
                 $cached->set($result, $lifetime);
             }
             else {
-                $this->log(sprintf("Found: %s", $key));
+                $this->log(new ItemFoundEvent($key));
             }
         } else {
             $result = call_user_func($resource, $this);
@@ -200,12 +207,20 @@ class Site implements SiteInterface, \ArrayAccess
 
     /**
      * @param string $message
-     * @param string $level
+     * @param int $level
+     * @param array $context
      */
-    public function log($message, $level = null)
+    public function log($message, $level = null, $context = [])
     {
-        if (!isset($level)) $level = LogLevel::INFO;
-        $this->getLog()->log($level, $message);
+        if ($message instanceof EventInterface) {
+            $context['event'] = $message;
+            $level = $message->getLogLevel();
+            $message = $message->getLogMessage();
+        }
+        if (!isset($level)) {
+            $level = LogLevel::INFO;
+        }
+        $this->getLog()->log($level, $message, $context);
     }
 
     /**
@@ -214,9 +229,7 @@ class Site implements SiteInterface, \ArrayAccess
      */
     public function logException(\Exception $e, $level = LogLevel::ERROR)
     {
-        $eClass = get_class($e);
-        $message = sprintf("%s: %s (%s, line %d", $eClass, $e->getMessage(), $e->getFile(), $e->getLine());
-        $this->log($message, $level);
+        $this->log(new ExceptionEvent($e), $level);
     }
 
     /**
@@ -291,13 +304,17 @@ class Site implements SiteInterface, \ArrayAccess
     }
 
     /**
-     * @param string $template
-     * @param array $variables
+     * @param mixed $template
+     * @param array $context
      * @return string
      */
-    public function render($template, array $variables = [])
+    public function render($template, array $context = [])
     {
-        return $this->getTwig()->render($template, $variables);
+        if ($template instanceof RenderableInterface) {
+            $context += $template->getTemplateContext();
+            $template = $template->getTemplate();
+        }
+        return $this->getTwig()->render($template, $context);
     }
 
     /**
@@ -306,7 +323,7 @@ class Site implements SiteInterface, \ArrayAccess
     public function respond(Request $request)
     {
         try {
-            $this->logRequest($request);
+            $this->log(new RequestReceivedEvent($request));
             $response = call_user_func($this->getResponder($request), $this, $request);
         } catch (\Exception $error) {
             $response = $this->recover($error);
@@ -314,6 +331,9 @@ class Site implements SiteInterface, \ArrayAccess
         if ($response instanceof Response) {
             $response->prepare($request);
             $response->send();
+            $this->log(new ResponseCompleteEvent($response, $request));
+        } else {
+            $this->log(new ResponseCompleteEvent(new Response(), $request));
         }
     }
 
@@ -396,14 +416,6 @@ class Site implements SiteInterface, \ArrayAccess
     protected function getTwigOptions()
     {
         return [];
-    }
-
-    /**
-     * @param Request $request
-     */
-    protected function logRequest(Request $request)
-    {
-        $this->log("Request received: " . $request->getPathInfo());
     }
 
     /**

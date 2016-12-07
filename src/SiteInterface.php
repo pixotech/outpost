@@ -54,9 +54,10 @@ interface SiteInterface
 
     /**
      * @param string $message
-     * @param mixed $level
+     * @param int $level
+     * @param array $context
      */
-    public function log($message, $level = null);
+    public function log($message, $level = null, $context = []);
 
     /**
      * @param \Exception $error
@@ -64,11 +65,11 @@ interface SiteInterface
     public function recover(\Exception $error);
 
     /**
-     * @param string $template
-     * @param array $variables
+     * @param mixed $template
+     * @param array $context
      * @return string
      */
-    public function render($template, array $variables = []);
+    public function render($template, array $context = []);
 
     /**
      * @param Request $request
