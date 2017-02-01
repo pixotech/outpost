@@ -10,7 +10,7 @@ use Outpost\Console\Responders\Templates\TemplatePreviewResponder;
 use Outpost\Files\Directory;
 use Outpost\Site;
 use Outpost\SiteInterface;
-use Outpost\Twig\Functions\BemSelectorFunction;
+use Pixo\BEM\Twig\BemExtension;
 use Symfony\Component\HttpFoundation\Request;
 
 class ConsoleSite extends Site
@@ -165,7 +165,7 @@ class ConsoleSite extends Site
     protected function makeTwigParser()
     {
         $twig = parent::makeTwigParser();
-        $twig->addFunction(new BemSelectorFunction());
+        $twig->addExtension(new BemExtension());
         return $twig;
     }
 }
