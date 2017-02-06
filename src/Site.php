@@ -23,6 +23,7 @@ use Outpost\Files\TemplateFile;
 use Outpost\Reflection\ClassCollection;
 use Outpost\Resources\CacheableInterface;
 use Outpost\Recovery\HelpPage;
+use Outpost\Responders\Responder;
 use Outpost\Routing\Router;
 use Outpost\Routing\RouterInterface;
 use Outpost\Templates\RenderableInterface;
@@ -190,19 +191,11 @@ class Site implements SiteInterface, \ArrayAccess
     }
 
     /**
-     * @deprecated
-     * @param string $name
-     * @param array $parameters
-     * @return string
+     * @deprecated 1.2
      */
-    public function getUrl($name, array $parameters = [])
+    public function getUrl()
     {
         user_error("URL generation is deprecated", E_USER_DEPRECATED);
-        $router = $this->getRouter();
-        if (!($router instanceof Router)) {
-            throw new \Exception("Routing shortcuts are only allowed with Phroute routing");
-        }
-        return '/' . $router->getRouter()->route($name, $parameters);
     }
 
     /**
@@ -255,37 +248,17 @@ class Site implements SiteInterface, \ArrayAccess
     }
 
     /**
-     * @deprecated
+     * @deprecated 1.2
      * @param string $path
      * @param mixed $responder
      */
     public function offsetSet($path, $responder)
     {
-        user_error("Deprecated: Use Router::route() instead", E_USER_DEPRECATED);
-        $router = $this->getRouter();
-        if (!($router instanceof Router)) {
-            throw new \Exception("Routing shortcuts are only allowed with Phroute routing");
-        }
-        $name = null;
-        if (is_array($responder) && !is_callable($responder)) {
-            $name = $path;
-            list($path, $responder) = each($responder);
-        }
-        if (!is_callable($responder)) {
-            throw new \InvalidArgumentException();
-        }
-        if ($pos = strpos($path, ' ')) {
-            $method = substr($path, 0, $pos);
-            $path = ltrim(substr($path, $pos));
-        } else {
-            $method = 'GET';
-        }
-        $router->route($method, $path, $responder, $name);
-
+        user_error("Deprecated: Use Site::route() instead", E_USER_DEPRECATED);
     }
 
     /**
-     * @deprecated
+     * @deprecated 1.2
      * @param string $key
      */
     public function offsetUnset($key)
@@ -335,6 +308,17 @@ class Site implements SiteInterface, \ArrayAccess
         } else {
             $this->log(new ResponseCompleteEvent(new Response(), $request));
         }
+    }
+
+    public function route($path)
+    {
+        $router = $this->getRouter();
+        if (!($router instanceof Router)) {
+            throw new \BadMethodCallException("Method not available for custom routers");
+        }
+        $responder = new Responder();
+        $router->route($path, $responder);
+        return $responder;
     }
 
     /**

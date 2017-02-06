@@ -2,23 +2,30 @@
 
 namespace Outpost\Routing;
 
-use Phroute\Phroute\Dispatcher;
-use Phroute\Phroute\RouteCollector;
+use FastRoute\Dispatcher;
+use FastRoute\RouteCollector;
 use Symfony\Component\HttpFoundation\Request;
 
 class Router implements RouterInterface
 {
     /**
-     * @var RouteCollector
+     * @var Dispatcher
      */
-    protected $router;
+    protected $dispatcher;
 
     /**
-     * @param RouteCollector|null $router
+     * @var callable[]
      */
-    public function __construct(RouteCollector $router = null)
+    protected $routes = [];
+
+    /**
+     * @param array $routes
+     */
+    public function __construct(array $routes = [])
     {
-        $this->router = $router ?: new RouteCollector();
+        foreach ($routes as $path => $responder) {
+            $this->route($path, $responder);
+        }
     }
 
     /**
@@ -27,30 +34,59 @@ class Router implements RouterInterface
      */
     public function getResponder(Request $request)
     {
-        $dispatcher = new Dispatcher($this->getRouter()->getData());
-        /** @var Route $response */
-        $response = $dispatcher->dispatch($request->getMethod(), $request->getPathInfo());
-        $request->attributes->add($response->getParameters());
-        return $response->getResponder();
+        $route = $this->getDispatcher()->dispatch($request->getMethod(), $request->getPathInfo());
+        switch ($route[0]) {
+
+            case Dispatcher::FOUND:
+                list(, $responder, $attributes) = $route;
+                $request->attributes->add($attributes);
+                break;
+
+            case Dispatcher::METHOD_NOT_ALLOWED;
+                throw new UnavailableMethodException($request, $route[1]);
+
+            case Dispatcher::NOT_FOUND:
+            default:
+                throw new UnrecognizedRouteException($request);
+        }
+        return $responder;
     }
 
     /**
-     * @return RouteCollector
-     */
-    public function getRouter()
-    {
-        return $this->router;
-    }
-
-    /**
-     * @param string $method
      * @param string $path
-     * @param callable $handler
-     * @param string $name
+     * @param callable $responder
      */
-    public function route($method, $path, callable $handler, $name = null)
+    public function route($path, callable $responder)
     {
-        $route = $name ? [$path, $name] : $path;
-        $this->getRouter()->addRoute($method, $route, new Route($handler));
+        $this->routes[$path] = $responder;
+        $this->destroyDispatcher();
+    }
+
+    protected function destroyDispatcher()
+    {
+        $this->dispatcher = null;
+    }
+
+    /**
+     * @return Dispatcher
+     */
+    protected function getDispatcher()
+    {
+        if (!isset($this->dispatcher)) {
+            $this->dispatcher = $this->makeDispatcher();
+        }
+        return $this->dispatcher;
+    }
+
+    /**
+     * @return Dispatcher
+     */
+    protected function makeDispatcher()
+    {
+        return \FastRoute\simpleDispatcher(function (RouteCollector $r) {
+            foreach ($this->routes as $path => $responder) {
+                $r->addRoute('GET', $path, $responder);
+            }
+        });
     }
 }

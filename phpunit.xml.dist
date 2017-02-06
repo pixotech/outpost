@@ -3,5 +3,9 @@
         <testsuite name="content">
             <directory>src/Content</directory>
         </testsuite>
+        <testsuite name="routing">
+            <directory>src/Responders</directory>
+            <directory>src/Routing</directory>
+        </testsuite>
     </testsuites>
 </phpunit>
