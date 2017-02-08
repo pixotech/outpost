@@ -57,8 +57,10 @@ class Responder implements ResponderInterface
      */
     protected function makeResponse(SiteInterface $site, Request $request)
     {
-        return array_reduce($this->tasks, function ($response, callable $task) use ($site, $request) {
-            return call_user_func($task, $site, $request, $response);
-        });
+        $response = null;
+        foreach ($this->tasks as $task) {
+            $response = call_user_func($task, $site, $request, $response);
+        }
+        return $response;
     }
 }
