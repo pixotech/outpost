@@ -128,6 +128,11 @@ class Site implements SiteInterface, \ArrayAccess
         return $this->cache;
     }
 
+    public function clearCache()
+    {
+        $this->getCache()->flush();
+    }
+
     /**
      * @return ClientInterface
      */
